@@ -1710,6 +1710,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
 
   React.useEffect(() => {
     // Only connect once on mount
+  
     const ws = new window.WebSocket('ws://165.232.179.192:1880/ws/switch');
     wsRef.current = ws;
 
