@@ -21,6 +21,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import LogoutIcon from '@mui/icons-material/Logout';
+import CloseIcon from '@mui/icons-material/Close';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -95,7 +96,7 @@ const menuItems = ({ isAuthenticated, isGuest }) => [
   ])
 ];
 
-export default function Sidebar({ currentPage, setCurrentPage, authenticated, isGuest, themeMode, setThemeMode, onLogout }) {
+export default function Sidebar({ currentPage, setCurrentPage, authenticated, isGuest, themeMode, setThemeMode, onLogout, mobileOpen, onMobileClose, variant }) {
   const theme = useTheme();
   const location = useLocation();
 
@@ -109,8 +110,16 @@ export default function Sidebar({ currentPage, setCurrentPage, authenticated, is
     onLogout();
   };
 
+  // Use 'temporary' Drawer for mobile, 'permanent' for desktop
+  const drawerVariant = variant || 'permanent';
+  const drawerProps = drawerVariant === 'temporary' ? {
+    open: mobileOpen,
+    onClose: onMobileClose,
+    ModalProps: { keepMounted: true },
+  } : {};
+
   return (
-    <StyledDrawer variant="permanent">
+    <StyledDrawer variant={drawerVariant} {...drawerProps}>
       <Box sx={{ 
         display: 'flex', 
         alignItems: 'center', 
@@ -118,6 +127,7 @@ export default function Sidebar({ currentPage, setCurrentPage, authenticated, is
         borderBottom: `1px solid ${theme.palette.mode === 'dark' 
           ? alpha(theme.palette.divider, 0.1)
           : alpha(theme.palette.divider, 0.1)}`,
+        justifyContent: 'space-between',
       }}>
         <Typography 
           variant="h5" 
@@ -133,10 +143,15 @@ export default function Sidebar({ currentPage, setCurrentPage, authenticated, is
         >
           Smart Home
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 'auto' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ThemeToggle onClick={toggleTheme} size="small">
             {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </ThemeToggle>
+          {drawerVariant === 'temporary' && (
+            <IconButton onClick={onMobileClose} size="small" sx={{ ml: 1 }}>
+              <CloseIcon />
+            </IconButton>
+          )}
         </Box>
       </Box>
 

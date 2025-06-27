@@ -19,6 +19,22 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import { motion } from 'framer-motion';
+import DevicesIcon from '@mui/icons-material/Devices';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import InputAdornment from '@mui/material/InputAdornment';
+import SearchIcon from '@mui/icons-material/Search';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import OutlinedInput from '@mui/material/OutlinedInput';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 const StyledSwitch = styled(Switch)(({ theme }) => ({
   '& .MuiSwitch-switchBase': {
@@ -98,9 +114,22 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 }));
 
 const StatCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  borderRadius: 24,
-  textAlign: 'center',
+  padding: theme.spacing(2, 1),
+  [theme.breakpoints.up('md')]: {
+    padding: theme.spacing(4, 3),
+    minWidth: 180,
+    maxWidth: 260,
+    borderRadius: 28,
+  },
+  borderRadius: 18,
+  textAlign: 'left',
+  minWidth: 90,
+  maxWidth: 140,
+  boxSizing: 'border-box',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  justifyContent: 'center',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   background: theme.palette.mode === 'dark' 
     ? 'rgba(26, 26, 26, 0.9)'
@@ -115,6 +144,26 @@ const StatCard = styled(Paper)(({ theme }) => ({
   },
 }));
 
+const ViewAllButton = styled(Button)(({ theme }) => ({
+  borderRadius: 16,
+  textTransform: 'none',
+  fontWeight: 700,
+  fontSize: '1.1rem',
+  padding: '12px 28px',
+  background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+  color: '#fff',
+  boxShadow: '0 4px 16px rgba(33, 150, 243, 0.15)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 1.5,
+  transition: 'all 0.2s',
+  '&:hover': {
+    background: `linear-gradient(90deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)`,
+    boxShadow: '0 8px 24px rgba(33, 150, 243, 0.25)',
+    transform: 'translateY(-2px) scale(1.03)',
+  },
+}));
+
 const Home = ({ roomsData = {}, setRoomsData }) => {
   const [addRoomDialogOpen, setAddRoomDialogOpen] = useState(false);
   const [newRoomName, setNewRoomName] = useState('');
@@ -123,6 +172,14 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
   const [addDeviceDialogOpen, setAddDeviceDialogOpen] = useState(false);
   const [newDeviceName, setNewDeviceName] = useState('');
   const [selectedRoomForDevice, setSelectedRoomForDevice] = useState('');
+  const [viewAllOpen, setViewAllOpen] = useState(false);
+  const [filterText, setFilterText] = useState('');
+  const [filterRoom, setFilterRoom] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+
   // Handle adding a new device
   const handleAddDevice = () => {
     if (newDeviceName.trim() && selectedRoomForDevice) {
@@ -236,6 +293,21 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
     setEditDialogOpen(false);
   };
 
+  // Helper to get emoji/icon for device type
+  const getDeviceEmoji = (name) => {
+    const n = name.toLowerCase();
+    if (n.includes('tv')) return '📺';
+    if (n.includes('ac') || n.includes('air')) return '❄️';
+    if (n.includes('light')) return '💡';
+    if (n.includes('fan')) return '🌀';
+    if (n.includes('water') || n.includes('heater')) return '🚿';
+    if (n.includes('mirror')) return '🪞';
+    if (n.includes('oven')) return '🔥';
+    if (n.includes('dishwasher')) return '🍽️';
+    if (n.includes('refrigerator')) return '❄️';
+    return '��';
+  };
+
   return (
     <Box sx={{ p: 4 }}>
       {/* Home Statistics Section */}
@@ -252,49 +324,121 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
             Home Overview
           </Typography>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={6} md={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
           >
             <StatCard>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography 
+                variant="h6" 
+                color="primary" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  textAlign: 'left',
+                  fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.5rem', lg: '1.7rem' },
+                  whiteSpace: 'normal',
+                  overflow: 'visible',
+                  textOverflow: 'unset',
+                  mb: { xs: 0.5, sm: 1, md: 2 },
+                  lineHeight: 1.15,
+                  minHeight: { xs: 24, sm: 28, md: 40, lg: 48 },
+                }}
+              >
                 Total Rooms
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2.8rem', lg: '3.2rem' },
+                  textAlign: 'center',
+                  lineHeight: 1.1,
+                  width: '100%',
+                }}
+              >
                 {Object.keys(roomsData).length}
               </Typography>
             </StatCard>
           </motion.div>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={6} md={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1 }}
           >
             <StatCard>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography 
+                variant="h6" 
+                color="primary" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  textAlign: 'left',
+                  fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.5rem', lg: '1.7rem' },
+                  whiteSpace: 'normal',
+                  overflow: 'visible',
+                  textOverflow: 'unset',
+                  mb: { xs: 0.5, sm: 1, md: 2 },
+                  lineHeight: 1.15,
+                  minHeight: { xs: 24, sm: 28, md: 40, lg: 48 },
+                }}
+              >
                 Total Devices
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold' }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2.8rem', lg: '3.2rem' },
+                  textAlign: 'center',
+                  lineHeight: 1.1,
+                  width: '100%',
+                }}
+              >
                 {Object.values(roomsData).reduce((acc, room) => acc + (room.devices?.length || 0), 0)}
               </Typography>
             </StatCard>
           </motion.div>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={6} md={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <StatCard>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography 
+                variant="h6" 
+                color="primary" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  textAlign: 'left',
+                  fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.5rem', lg: '1.7rem' },
+                  whiteSpace: 'normal',
+                  overflow: 'visible',
+                  textOverflow: 'unset',
+                  mb: { xs: 0.5, sm: 1, md: 2 },
+                  lineHeight: 1.15,
+                  minHeight: { xs: 24, sm: 28, md: 40, lg: 48 },
+                }}
+              >
                 Devices ON
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'success.main' }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2.8rem', lg: '3.2rem' },
+                  textAlign: 'center',
+                  lineHeight: 1.1,
+                  width: '100%',
+                }}
+              >
                 {Object.values(roomsData).reduce((acc, room) => 
                   acc + (room.devices?.filter(device => device.status).length || 0), 0)
                 }
@@ -302,17 +446,41 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
             </StatCard>
           </motion.div>
         </Grid>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={6} md={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.3 }}
           >
             <StatCard>
-              <Typography variant="h6" color="primary" gutterBottom>
+              <Typography 
+                variant="h6" 
+                color="primary" 
+                gutterBottom
+                sx={{
+                  fontWeight: 600,
+                  textAlign: 'left',
+                  fontSize: { xs: '0.95rem', sm: '1.05rem', md: '1.5rem', lg: '1.7rem' },
+                  whiteSpace: 'normal',
+                  overflow: 'visible',
+                  textOverflow: 'unset',
+                  mb: { xs: 0.5, sm: 1, md: 2 },
+                  lineHeight: 1.15,
+                  minHeight: { xs: 24, sm: 28, md: 40, lg: 48 },
+                }}
+              >
                 Devices OFF
               </Typography>
-              <Typography variant="h3" sx={{ fontWeight: 'bold', color: 'error.main' }}>
+              <Typography 
+                variant="h3" 
+                sx={{ 
+                  fontWeight: 'bold', 
+                  fontSize: { xs: '1.2rem', sm: '1.5rem', md: '2.8rem', lg: '3.2rem' },
+                  textAlign: 'center',
+                  lineHeight: 1.1,
+                  width: '100%',
+                }}
+              >
                 {Object.values(roomsData).reduce((acc, room) => 
                   acc + (room.devices?.filter(device => !device.status).length || 0), 0)
                 }
@@ -322,12 +490,19 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
         </Grid>
       </Grid>
 
-      {/* Room Controls Section */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <ViewAllButton
+          startIcon={<DevicesIcon sx={{ fontSize: 24 }} />}
+          onClick={() => setViewAllOpen(true)}
+          sx={{ flex: '1 1 180px', minWidth: 140, maxWidth: 220, height: 44, fontSize: '1rem', fontWeight: 700, justifyContent: 'center' }}
+        >
+          View All Devices
+        </ViewAllButton>
         <StyledButton
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setAddRoomDialogOpen(true)}
+          sx={{ flex: '1 1 180px', minWidth: 140, maxWidth: 220, height: 44, fontSize: '1rem', fontWeight: 700, justifyContent: 'center' }}
         >
           Add Room
         </StyledButton>
@@ -342,46 +517,90 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: index * 0.1 }}
             >
-              <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 0 } }}>
-                  <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '1.1rem', sm: '1.3rem' } }}>
-                    {roomName}
-                  </Typography>
-                  <Box>
-                    <StyledIconButton onClick={() => handleEditRoom(roomName)} size="large">
+              {isMobile ? (
+                <Box sx={{
+                  p: 2,
+                  borderRadius: 4,
+                  boxShadow: 2,
+                  bgcolor: 'background.paper',
+                  mb: 2,
+                }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>{roomName}</Typography>
+                    <StyledIconButton onClick={() => handleEditRoom(roomName)} size="medium">
                       <EditIcon />
                     </StyledIconButton>
                   </Box>
-                </Box>
-                <Divider sx={{ my: 2 }} />
-                <Grid container spacing={2}>
-                  {roomData.devices?.map((device, deviceIdx) => (
-                    <Grid item xs={12} key={deviceIdx}>
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
-                        alignItems: 'center',
-                        p: 2,
+                  <Box sx={{ display: 'flex', overflowX: 'auto', gap: 1.2, pb: 1, pt: 1 }}>
+                    {(roomData.devices || []).map((device, deviceIdx) => (
+                      <Box key={deviceIdx} sx={{
+                        minWidth: 80,
+                        maxWidth: 90,
+                        p: 0.7,
                         borderRadius: 2,
-                        bgcolor: 'background.paper',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          bgcolor: 'action.hover',
-                        },
-                        flexDirection: { xs: 'column', sm: 'row' },
-                        gap: { xs: 1, sm: 0 },
+                        boxShadow: 1,
+                        bgcolor: 'background.default',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 0.5,
+                        border: '1px solid',
+                        borderColor: 'divider',
                       }}>
-                        <Typography sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}>{device.name}</Typography>
+                        <span style={{ fontSize: '1.1em', marginBottom: 1 }}>{getDeviceEmoji(device.name)}</span>
+                        <Typography sx={{ fontWeight: 600, fontSize: '0.85rem', textAlign: 'center', mb: 0.2 }}>{device.name}</Typography>
                         <StyledSwitch
                           checked={device.status}
                           onChange={() => handleDeviceToggle(roomName, deviceIdx)}
-                          size="medium"
+                          size="small"
                         />
                       </Box>
-                    </Grid>
-                  ))}
-                </Grid>
-              </StyledPaper>
+                    ))}
+                  </Box>
+                </Box>
+              ) : (
+                <StyledPaper sx={{ p: { xs: 2, sm: 3 } }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 2, sm: 0 } }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', fontSize: { xs: '1.1rem', sm: '1.3rem' } }}>
+                      {roomName}
+                    </Typography>
+                    <Box>
+                      <StyledIconButton onClick={() => handleEditRoom(roomName)} size="large">
+                        <EditIcon />
+                      </StyledIconButton>
+                    </Box>
+                  </Box>
+                  <Divider sx={{ my: 2 }} />
+                  <Grid container spacing={2}>
+                    {roomData.devices?.map((device, deviceIdx) => (
+                      <Grid item xs={12} key={deviceIdx}>
+                        <Box sx={{ 
+                          display: 'flex', 
+                          justifyContent: 'space-between', 
+                          alignItems: 'center',
+                          p: 2,
+                          borderRadius: 2,
+                          bgcolor: 'background.paper',
+                          transition: 'all 0.3s ease',
+                          '&:hover': {
+                            bgcolor: 'action.hover',
+                          },
+                          flexDirection: { xs: 'column', sm: 'row' },
+                          gap: { xs: 1, sm: 0 },
+                        }}>
+                          <Typography sx={{ fontSize: { xs: '1rem', sm: '1.1rem' } }}>{device.name}</Typography>
+                          <StyledSwitch
+                            checked={device.status}
+                            onChange={() => handleDeviceToggle(roomName, deviceIdx)}
+                            size="medium"
+                          />
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </StyledPaper>
+              )}
             </motion.div>
           </Grid>
         ))}
@@ -551,6 +770,189 @@ const Home = ({ roomsData = {}, setRoomsData }) => {
         <DialogActions>
           <Button onClick={() => setAddRoomDialogOpen(false)}>Cancel</Button>
           <Button onClick={handleAddNewRoom} variant="contained">Add Room</Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={viewAllOpen} onClose={() => setViewAllOpen(false)} maxWidth="sm" fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            boxShadow: 12,
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.background.paper} 80%, ${theme.palette.primary.light}11 100%)`,
+            p: 0,
+          }
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 800, fontSize: '1.5rem', letterSpacing: 0.5, pb: 1.5, borderBottom: '1px solid', borderColor: 'divider', bgcolor: 'background.default', position: 'sticky', top: 0, zIndex: 2 }}>
+          All Devices
+        </DialogTitle>
+        <Box sx={{ display: 'flex', gap: 2, p: 2, pb: 0, alignItems: 'center', flexWrap: 'wrap', bgcolor: 'background.default', borderBottom: '1px solid', borderColor: 'divider', position: 'sticky', top: 64, zIndex: 2 }}>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Room</InputLabel>
+            <Select
+              value={filterRoom}
+              label="Room"
+              onChange={e => setFilterRoom(e.target.value)}
+            >
+              <MenuItem value="All">All</MenuItem>
+              {Object.keys(roomsData).map(room => (
+                <MenuItem key={room} value={room}>{room}</MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Status</InputLabel>
+            <Select
+              value={filterStatus}
+              label="Status"
+              onChange={e => setFilterStatus(e.target.value)}
+            >
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="ON">ON</MenuItem>
+              <MenuItem value="OFF">OFF</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ flex: 1, minWidth: 160 }}>
+            <OutlinedInput
+              value={filterText}
+              onChange={e => setFilterText(e.target.value)}
+              placeholder="Search device name..."
+              startAdornment={
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              }
+              sx={{ borderRadius: 2 }}
+            />
+          </FormControl>
+        </Box>
+        <DialogContent dividers sx={{ p: 0 }}>
+          {isMobile ? (
+            <Box sx={{ p: 2 }}>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: 2,
+                }}
+              >
+                {Object.entries(roomsData).flatMap(([roomName, roomData]) =>
+                  (roomData.devices || [])
+                    .filter(device => device.name !== 'Only Smart TV')
+                    .filter(device =>
+                      (filterRoom === 'All' || roomName === filterRoom) &&
+                      (filterStatus === 'All' || (filterStatus === 'ON' ? device.status : !device.status)) &&
+                      (filterText.trim() === '' || device.name.toLowerCase().includes(filterText.trim().toLowerCase()))
+                    )
+                    .map((device, idx) => (
+                      <Box key={roomName + device.name + idx} sx={{
+                        p: 2,
+                        borderRadius: 3,
+                        boxShadow: 2,
+                        bgcolor: 'background.paper',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 1,
+                        minHeight: 120,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                      }}>
+                        <span style={{ fontSize: '2em', marginBottom: 4 }}>{getDeviceEmoji(device.name)}</span>
+                        <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', textAlign: 'center' }}>{device.name}</Typography>
+                        <Typography sx={{ color: 'text.secondary', fontSize: '0.95rem', textAlign: 'center' }}>{roomName}</Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'center', fontWeight: 700, fontSize: '1.05rem', color: device.status ? 'success.main' : 'error.main', mt: 0.5 }}>
+                          {device.status ? <CheckCircleIcon fontSize="small" sx={{ mr: 0.5 }} /> : <CancelIcon fontSize="small" sx={{ mr: 0.5 }} />}
+                          {device.status ? 'ON' : 'OFF'}
+                        </Box>
+                      </Box>
+                    ))
+                )}
+                {Object.entries(roomsData).every(([roomName, roomData]) =>
+                  (roomData.devices || [])
+                    .filter(device => device.name !== 'Only Smart TV')
+                    .filter(device =>
+                      (filterRoom === 'All' || roomName === filterRoom) &&
+                      (filterStatus === 'All' || (filterStatus === 'ON' ? device.status : !device.status)) &&
+                      (filterText.trim() === '' || device.name.toLowerCase().includes(filterText.trim().toLowerCase()))
+                    ).length === 0
+                ) && (
+                  <Typography color="text.secondary" sx={{ gridColumn: '1 / -1', textAlign: 'center', mt: 2 }}>No devices found.</Typography>
+                )}
+              </Box>
+            </Box>
+          ) : (
+            <TableContainer sx={{ borderRadius: 3, boxShadow: 2, overflow: 'hidden' }}>
+              <Table size="small" sx={{ minWidth: 420 }}>
+                <TableHead>
+                  <TableRow sx={{ background: 'rgba(33,150,243,0.10)' }}>
+                    <TableCell sx={{ fontWeight: 700, fontSize: '1.1rem', position: 'sticky', top: 0, bgcolor: 'background.default', zIndex: 1 }}>Device</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: '1.1rem', position: 'sticky', top: 0, bgcolor: 'background.default', zIndex: 1 }}>Room</TableCell>
+                    <TableCell sx={{ fontWeight: 700, fontSize: '1.1rem', position: 'sticky', top: 0, bgcolor: 'background.default', zIndex: 1 }}>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {Object.entries(roomsData).flatMap(([roomName, roomData], idx) =>
+                    (roomData.devices || [])
+                      .filter(device => device.name !== 'Only Smart TV')
+                      .filter(device =>
+                        (filterRoom === 'All' || roomName === filterRoom) &&
+                        (filterStatus === 'All' || (filterStatus === 'ON' ? device.status : !device.status)) &&
+                        (filterText.trim() === '' || device.name.toLowerCase().includes(filterText.trim().toLowerCase()))
+                      )
+                      .map((device, dIdx) => (
+                        <TableRow
+                          key={roomName + device.name + dIdx}
+                          sx={{
+                            background: (idx + dIdx) % 2 === 0 ? 'rgba(0,0,0,0.025)' : 'transparent',
+                            transition: 'background 0.2s',
+                            '&:hover': { background: 'rgba(33,150,243,0.08)' },
+                            borderBottom: '1px solid',
+                            borderColor: 'divider',
+                          }}
+                        >
+                          <TableCell sx={{ fontWeight: 700, fontSize: '1.13rem', display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <span style={{ fontSize: '1.35em', marginRight: 8 }}>{getDeviceEmoji(device.name)}</span>
+                            {device.name}
+                          </TableCell>
+                          <TableCell sx={{ color: 'text.secondary', fontWeight: 500 }}>{roomName}</TableCell>
+                          <TableCell>
+                            {device.status ? (
+                              <Box sx={{ display: 'flex', alignItems: 'center', color: 'success.main', fontWeight: 700, fontSize: '1.08rem' }}>
+                                <CheckCircleIcon fontSize="small" sx={{ mr: 0.5 }} /> ON
+                              </Box>
+                            ) : (
+                              <Box sx={{ display: 'flex', alignItems: 'center', color: 'error.main', fontWeight: 700, fontSize: '1.08rem' }}>
+                                <CancelIcon fontSize="small" sx={{ mr: 0.5 }} /> OFF
+                              </Box>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))
+                  )}
+                  {Object.entries(roomsData).every(([roomName, roomData]) =>
+                    (roomData.devices || [])
+                      .filter(device => device.name !== 'Only Smart TV')
+                      .filter(device =>
+                        (filterRoom === 'All' || roomName === filterRoom) &&
+                        (filterStatus === 'All' || (filterStatus === 'ON' ? device.status : !device.status)) &&
+                        (filterText.trim() === '' || device.name.toLowerCase().includes(filterText.trim().toLowerCase()))
+                      ).length === 0
+                  ) && (
+                    <TableRow>
+                      <TableCell colSpan={3} align="center" sx={{ color: 'text.secondary' }}>No devices found.</TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, bgcolor: 'background.default', borderTop: '1px solid', borderColor: 'divider' }}>
+          <Button onClick={() => setViewAllOpen(false)} color="primary" variant="contained" size="large" sx={{ fontWeight: 700, borderRadius: 2, px: 4, fontSize: '1.1rem', boxShadow: 2 }}>
+            CLOSE
+          </Button>
         </DialogActions>
       </Dialog>
     </Box>

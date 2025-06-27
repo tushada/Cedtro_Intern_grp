@@ -61,6 +61,10 @@ import BedIcon from '@mui/icons-material/Bed';
 import KitchenIcon from '@mui/icons-material/Kitchen';
 import BathtubIcon from '@mui/icons-material/Bathtub';
 import LivingIcon from '@mui/icons-material/Chair';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import DevicesIcon from '@mui/icons-material/Devices';
+import MeetingRoomIcon from '@mui/icons-material/MeetingRoom';
 
 // Recharts components
 const RechartsLineChart = LineChart;
@@ -1202,32 +1206,26 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
     return () => clearInterval(timer);
   }, []);
 
-  // Mock weather data
-  const weatherData = {
-    current: {
-      temperature: 28, // Celsius
-      condition: 'partly cloudy',
-      humidity: 65,
-      windSpeed: 10, // km/h
-      precipitation: 0, // % chance
-      uvIndex: 6,
-      airQuality: 'good',
-    },
-    forecast: {
-      today: {
-        high: 32,
-        low: 24,
-        condition: 'partly cloudy',
-        precipitation: 10,
-      },
-      tomorrow: {
-        high: 30,
-        low: 22,
-        condition: 'cloudy',
-        precipitation: 20,
-      },
-    },
-  };
+  // MQTT state for weather
+  const [liveWeather, setLiveWeather] = React.useState({
+    temperature: null,
+    humidity: null,
+  });
+
+  React.useEffect(() => {
+    const ws = new window.WebSocket("ws://" + window.location.hostname + ":1880/ws/env");
+
+    ws.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      if (data.type === "temperature") {
+        setLiveWeather(prev => ({ ...prev, temperature: data.value }));
+      } else if (data.type === "humidity") {
+        setLiveWeather(prev => ({ ...prev, humidity: data.value }));
+      }
+    };
+
+    return () => ws.close();
+  }, []);
 
   const [themeMode, setThemeMode] = React.useState('dark');
 
@@ -1595,7 +1593,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
       const allDevices = Object.entries(roomsData).flatMap(([roomName, roomData]) =>
         (roomData?.devices || [])
           .filter(device => device.name !== 'Only Smart TV')
-          .map(device => ({ ...device, room: roomName }))
+          .map(device => ({ room: roomName, name: device.name }))
       );
       setQuickAccessDevices(allDevices.slice(0, 3));
     }
@@ -1712,7 +1710,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
 
   React.useEffect(() => {
     // Only connect once on mount
-    const ws = new window.WebSocket(`ws://${window.location.hostname}:1880/ws/switch`);
+    const ws = new window.WebSocket('ws://165.232.179.192:1880/ws/switch');
     wsRef.current = ws;
 
     ws.onopen = () => setWsStatus('✅ Connected to Node-RED');
@@ -1744,6 +1742,9 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
     if (name.includes('bathroom')) return <BathtubIcon />;
     return <PowerSettingsNewIcon />;
   }
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   return (
     <Box sx={{ pt: { xs: 1, sm: 2, md: 3 }, pr: { xs: 1, sm: 2, md: 3 }, pb: { xs: 1, sm: 2, md: 3 }, pl: 0 }}>
@@ -1819,23 +1820,21 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                   <Chip 
                     key={member} 
                     label={member} 
-                  avatar={<Avatar>{member[0]}</Avatar>}
-                  sx={(theme) => ({
-                    bgcolor: theme.palette.mode === 'dark' ? 'rgba(33,150,243,0.1)' : 'rgba(33,150,243,0.15)',
-                    color: theme.palette.primary.main,
+                    avatar={<Avatar>{member[0]}</Avatar>}
+                    sx={(theme) => ({
+                      bgcolor: theme.palette.mode === 'dark' ? 'rgba(33,150,243,0.1)' : 'rgba(33,150,243,0.15)',
+                      color: theme.palette.primary.main,
                       fontWeight: 600, 
-                    fontSize: { xs: '0.9rem', sm: '1rem' },
-                    px: 2,
-                    borderRadius: 2,
-                    transition: 'all 0.2s',
-                    '&:hover': { bgcolor: theme.palette.primary.main, color: '#fff' },
-                  })}
+                      fontSize: { xs: '0.9rem', sm: '1rem' },
+                      px: 2,
+                      borderRadius: 2,
+                      transition: 'all 0.2s',
+                      '&:hover': { bgcolor: theme.palette.primary.main, color: '#fff' },
+                    })}
                   />
                 ))}
-              <IconButton color="primary" sx={{ mt: 1 }}>
-                <AddIcon />
-              </IconButton>
-                  </Box>
+              {/* Removed the IconButton with AddIcon for adding members */}
+            </Box>
           </Box>
         </Box>
       </DashboardBanner>
@@ -1857,7 +1856,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
             }}
           >
             <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-              Current Weather <span style={{ color: '#90caf9' }}>({weatherData.current.condition})</span>
+              Current Weather <span style={{ color: '#90caf9' }}>({liveWeather.condition})</span>
               </Typography>
             <Box
                       sx={{ 
@@ -1869,22 +1868,22 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
               {/* Weather metrics here */}
                 <WeatherCard>
                   <WbSunnyIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                <Typography variant="h6">{weatherData.current.temperature}°C</Typography>
+                <Typography variant="h6">{liveWeather.temperature !== null ? `${liveWeather.temperature}°C` : '—'}</Typography>
                 <Typography variant="caption" color="text.secondary">Temperature</Typography>
                 </WeatherCard>
                 <WeatherCard>
                   <WaterDropIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                <Typography variant="h6">{weatherData.current.humidity}%</Typography>
+                <Typography variant="h6">{liveWeather.humidity !== null ? `${liveWeather.humidity}%` : '—'}</Typography>
                 <Typography variant="caption" color="text.secondary">Humidity</Typography>
                 </WeatherCard>
                 <WeatherCard>
                   <WindIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                <Typography variant="h6">{weatherData.current.windSpeed} km/h</Typography>
+                <Typography variant="h6">—</Typography>
                 <Typography variant="caption" color="text.secondary">Wind Speed</Typography>
                 </WeatherCard>
                 <WeatherCard>
                   <UmbrellaIcon sx={{ fontSize: 40, color: 'primary.main' }} />
-                <Typography variant="h6">{weatherData.current.precipitation}%</Typography>
+                <Typography variant="h6">—</Typography>
                 <Typography variant="caption" color="text.secondary">Precipitation</Typography>
                 </WeatherCard>
               </Box>
@@ -1920,24 +1919,28 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                 gap: 2,
               }}
             >
-              {quickAccessDevices.filter(device => device.name !== 'Only Smart TV').map((device, idx) => (
-                  <DeviceCard key={device.name} status={device.status}>
+              {quickAccessDevices.filter(ref => ref.name !== 'Only Smart TV').map((ref, idx) => {
+                const device = roomsData[ref.room]?.devices?.find(d => d.name === ref.name);
+                if (!device) return null;
+                return (
+                  <DeviceCard key={ref.room + ref.name} status={device.status}>
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                       <IconToggle
                         status={device.status}
                         disabled={isGuest}
-                        onClick={() => !isGuest && handleDeviceToggle(device.room, device.name)}
-                      sx={{ fontSize: '1.5rem', mb: 1 }}
+                        onClick={() => !isGuest && handleDeviceToggle(ref.room, ref.name)}
+                        sx={{ fontSize: '1.5rem', mb: 1 }}
                       >
                         {getDeviceEmoji(device.name)}
                       </IconToggle>
-                    <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                      {device.name}
-                    </Typography>
+                      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                        {device.name}
+                      </Typography>
                     </Box>
                   </DeviceCard>
-                ))}
-              </Box>
+                );
+              })}
+            </Box>
           </Paper>
         </Grid>
       </Grid>
@@ -2068,72 +2071,114 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                 background: 'rgba(255,255,255,0.03)',
                 boxShadow: 2,
               }}>
-                <Box>
-                  <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Devices ON / Total
+                {isMobile ? (
+                  <Paper elevation={3} sx={{ display: 'flex', gap: 2, justifyContent: 'center', alignItems: 'center', mb: 2, p: 2, borderRadius: 3, boxShadow: 4, bgcolor: 'background.paper' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 110 }}>
+                      <DevicesIcon sx={{ color: 'primary.main', fontSize: 28, mb: 0.5 }} />
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, textAlign: 'center', mb: 0.5 }}>
+                        Devices ON / Total
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 800, color: 'primary.main', textAlign: 'center', fontSize: '2rem', letterSpacing: 1 }}>
+                        {deviceStats.on} <span style={{ color: '#888', fontWeight: 500 }}>/</span> {deviceStats.total}
+                      </Typography>
+                    </Box>
+                    <Divider orientation="vertical" flexItem sx={{ mx: 1, borderColor: 'divider' }} />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 110 }}>
+                      <MeetingRoomIcon sx={{ color: 'success.main', fontSize: 28, mb: 0.5 }} />
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 600, textAlign: 'center', mb: 0.5 }}>
+                        Occupied Rooms / Total
+                      </Typography>
+                      <Button
+                        size="small"
+                        onClick={handleOccupiedClick}
+                        sx={{
+                          color: 'success.main',
+                          fontWeight: 800,
+                          fontSize: '2rem',
+                          textTransform: 'none',
+                          p: 0,
+                          minWidth: 0,
+                          lineHeight: 1.1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        endIcon={<ExpandMoreIcon sx={{ fontSize: '2rem' }} />}
+                      >
+                        {roomStats.occupied} <span style={{ color: '#888', fontWeight: 500 }}>/</span> {roomStats.total}
+                      </Button>
+                    </Box>
+                  </Paper>
+                ) : (
+                  <>
+                    <Box>
+                      <Typography variant="subtitle1" color="text.secondary" sx={{ fontWeight: 500 }}>
+                        Devices ON / Total
+                      </Typography>
+                      <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                        {deviceStats.on} / {deviceStats.total}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ position: 'relative', display: 'inline-block' }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Occupied Rooms / Total
+                      </Typography>
+                      <Button
+                        size="small"
+                        onClick={handleOccupiedClick}
+                        sx={{
+                          color: 'secondary.main',
+                          fontWeight: 800,
+                          fontSize: '2rem', // Increased font size
+                          textTransform: 'none',
+                          p: 0,
+                          minWidth: 0,
+                          ml: 1,
+                          verticalAlign: 'middle',
+                          lineHeight: 1.1,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
+                        endIcon={<ExpandMoreIcon sx={{ fontSize: '2rem' }} />} // Make icon bigger
+                      >
+                        {roomStats.occupied} / {roomStats.total}
+                      </Button>
+                      <Menu
+                        anchorEl={occupiedAnchorEl}
+                        open={occupiedOpen}
+                        onClose={handleOccupiedClose}
+                        PaperProps={{ sx: { minWidth: 200 } }}
+                        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+                        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                      >
+                        {Object.entries(roomsData).map(([roomName, roomData]) => {
+                          const isOccupied = roomData.devices && roomData.devices.some(d => d.status);
+                          return (
+                            <MenuItem key={roomName} dense>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Box
+                                  sx={{
+                                    width: 10,
+                                    height: 10,
+                                    borderRadius: '50%',
+                                    bgcolor: isOccupied ? 'success.main' : 'grey.500',
+                                    mr: 1,
+                                  }}
+                                />
+                                <Typography variant="body2" sx={{ color: isOccupied ? 'success.main' : 'text.secondary', fontWeight: isOccupied ? 600 : 400 }}>
+                                  {roomName}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
+                                  {isOccupied ? 'Occupied' : 'Not Occupied'}
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                    {deviceStats.on} / {deviceStats.total}
-                  </Typography>
-                </Box>
-                <Box sx={{ position: 'relative', display: 'inline-block' }}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Occupied Rooms / Total
-                  </Typography>
-                  <Button
-                    size="small"
-                    onClick={handleOccupiedClick}
-                    sx={{
-                      color: 'secondary.main',
-                      fontWeight: 800,
-                      fontSize: '2rem', // Increased font size
-                      textTransform: 'none',
-                      p: 0,
-                      minWidth: 0,
-                      ml: 1,
-                      verticalAlign: 'middle',
-                      lineHeight: 1.1,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                    }}
-                    endIcon={<ExpandMoreIcon sx={{ fontSize: '2rem' }} />} // Make icon bigger
-                  >
-                    {roomStats.occupied} / {roomStats.total}
-                  </Button>
-                  <Menu
-                    anchorEl={occupiedAnchorEl}
-                    open={occupiedOpen}
-                    onClose={handleOccupiedClose}
-                    PaperProps={{ sx: { minWidth: 200 } }}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-                  >
-                    {Object.entries(roomsData).map(([roomName, roomData]) => {
-                      const isOccupied = roomData.devices && roomData.devices.some(d => d.status);
-                      return (
-                        <MenuItem key={roomName} dense>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Box
-                              sx={{
-                                width: 10,
-                                height: 10,
-                                borderRadius: '50%',
-                                bgcolor: isOccupied ? 'success.main' : 'grey.500',
-                                mr: 1,
-                              }}
-                            />
-                            <Typography variant="body2" sx={{ color: isOccupied ? 'success.main' : 'text.secondary', fontWeight: isOccupied ? 600 : 400 }}>
-                              {roomName}
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: 'text.secondary', ml: 1 }}>
-                              {isOccupied ? 'Occupied' : 'Not Occupied'}
-                  </Typography>
-                          </Box>
-                        </MenuItem>
-                      );
-                    })}
-                  </Menu>
-                </Box>
+                              </Box>
+                            </MenuItem>
+                          );
+                        })}
+                      </Menu>
+                    </Box>
+                  </>
+                )}
               </Box>
 
               <Box sx={{ mb: 3 }}>
@@ -2665,7 +2710,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                     if (selected) {
                       setQuickAccessDevices(prev => prev.filter(d => !(d.name === device.name && d.room === roomName)));
                     } else {
-                      setQuickAccessDevices(prev => [...prev, { ...device, room: roomName }]);
+                      setQuickAccessDevices(prev => [...prev, { name: device.name, room: roomName }]);
                     }
                   }}
                 >

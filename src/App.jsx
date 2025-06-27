@@ -16,6 +16,15 @@ import UserProfile from './components/UserProfile';
 import Settings from './components/Settings';
 import EnergyDetails from './components/EnergyDetails';
 import Logout from './components/Logout';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
+import AppBar from '@mui/material/AppBar';
+import Toolbar from '@mui/material/Toolbar';
+import IconButton from '@mui/material/IconButton';
+import MenuIcon from '@mui/icons-material/Menu';
+import Fab from '@mui/material/Fab';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
 
 const darkTheme = createTheme({
   palette: {
@@ -89,7 +98,6 @@ const initialRoomsData = {
   'Living Room': {
     devices: [
       { name: 'Smart TV', status: true },
-      { name: 'Only Smart TV', status: false },
       { name: 'Air Conditioner', status: false },
       { name: 'Smart Lights', status: true },
     ]
@@ -125,6 +133,9 @@ function AppContent({ themeMode, setThemeMode }) {
   const [currentPage, setCurrentPage] = useState('Login');
   const [roomsData, setRoomsData] = useState(initialRoomsData);
   const [username, setUsername] = useState('User');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Initialize with Login page if not authenticated
   useEffect(() => {
@@ -174,6 +185,18 @@ function AppContent({ themeMode, setThemeMode }) {
     <>
       {authenticated ? (
         <AppContainer>
+          {isMobile && (
+            <AppBar position="fixed" color="default" elevation={1} sx={{ zIndex: theme => theme.zIndex.drawer + 1 }}>
+              <Toolbar>
+                <IconButton edge="start" color="inherit" aria-label="menu" onClick={() => setSidebarOpen(true)}>
+                  <MenuIcon />
+                </IconButton>
+                <Typography variant="h6" sx={{ ml: 2, fontWeight: 700 }}>
+                  Smart Home
+                </Typography>
+              </Toolbar>
+            </AppBar>
+          )}
           <Sidebar
             currentPage={currentPage}
             setCurrentPage={handlePageChange}
@@ -182,8 +205,11 @@ function AppContent({ themeMode, setThemeMode }) {
             themeMode={themeMode}
             setThemeMode={setThemeMode}
             onLogout={handleLogout}
+            mobileOpen={isMobile ? sidebarOpen : undefined}
+            onMobileClose={isMobile ? () => setSidebarOpen(false) : undefined}
+            variant={isMobile ? 'temporary' : 'permanent'}
           />
-          <MainContent>
+          <MainContent sx={{ mt: isMobile ? 7 : 0 }}>
             <Routes>
               <Route 
                 path="/" 
@@ -243,6 +269,22 @@ function AppContent({ themeMode, setThemeMode }) {
               />
             </Routes>
           </MainContent>
+          {isMobile && (
+            <Fab
+              color="primary"
+              aria-label="toggle theme"
+              onClick={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+              sx={{
+                position: 'fixed',
+                bottom: 24,
+                right: 24,
+                zIndex: 2000,
+                boxShadow: 4,
+              }}
+            >
+              {themeMode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+            </Fab>
+          )}
         </AppContainer>
       ) : (
         <Routes>
