@@ -1,5 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyACoD3KdTEabrL4tv5k-KBRldeEhg5Mzzg",
@@ -8,7 +8,7 @@ const firebaseConfig = {
   storageBucket: "smart-home-ceb64.firebasestorage.app",
   messagingSenderId: "525840124631",
   appId: "1:525840124631:web:a74e510fcd56b4aad93e92",
-  measurementId: "G-4H83KJ1TXM"
+  measurementId: "G-4H83KJ1TXM",
 };
 
 // Initialize Firebase

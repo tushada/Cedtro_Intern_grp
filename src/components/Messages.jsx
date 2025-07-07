@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -33,8 +33,8 @@ import {
   useMediaQuery,
   Menu,
   Checkbox,
-  ButtonGroup
-} from '@mui/material';
+  ButtonGroup,
+} from "@mui/material";
 import {
   Error as ErrorIcon,
   Warning as WarningIcon,
@@ -57,19 +57,25 @@ import {
   Flag as FlagIcon,
   FlagOutlined as FlagOutlinedIcon,
   CheckBox as CheckBoxIcon,
-  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon
-} from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+  CheckBoxOutlineBlank as CheckBoxOutlineBlankIcon,
+} from "@mui/icons-material";
+import { motion, AnimatePresence } from "framer-motion";
 
-const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, isSelected }) => {
+const NotificationItem = ({
+  notification,
+  onDismiss,
+  onDelete,
+  onToggleSelect,
+  isSelected,
+}) => {
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
 
   const getIcon = (type) => {
     switch (type) {
-      case 'error':
+      case "error":
         return <ErrorIcon color="error" />;
-      case 'warning':
+      case "warning":
         return <WarningIcon color="warning" />;
       default:
         return <NotificationsIcon color="info" />;
@@ -78,12 +84,12 @@ const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, i
 
   const getSeverity = (type) => {
     switch (type) {
-      case 'error':
-        return 'error';
-      case 'warning':
-        return 'warning';
+      case "error":
+        return "error";
+      case "warning":
+        return "warning";
       default:
-        return 'info';
+        return "info";
     }
   };
 
@@ -99,26 +105,35 @@ const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, i
         sx={{
           mb: 2,
           borderRadius: 2,
-          overflow: 'hidden',
+          overflow: "hidden",
           borderLeft: `4px solid ${
-            notification.type === 'error' ? theme.palette.error.main : 
-            notification.type === 'warning' ? theme.palette.warning.main : 
-            theme.palette.info.main
+            notification.type === "error"
+              ? theme.palette.error.main
+              : notification.type === "warning"
+                ? theme.palette.warning.main
+                : theme.palette.info.main
           }`,
-          transition: 'all 0.3s ease',
-          '&:hover': {
-            transform: 'translateY(-2px)',
+          transition: "all 0.3s ease",
+          "&:hover": {
+            transform: "translateY(-2px)",
             boxShadow: theme.shadows[4],
-          }
+          },
         }}
       >
         <CardContent sx={{ p: 2 }}>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "flex-start", gap: 2 }}>
             <ListItemIcon sx={{ minWidth: 40 }}>
               {getIcon(notification.type)}
             </ListItemIcon>
             <Box sx={{ flex: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  mb: 1,
+                }}
+              >
                 <Typography variant="subtitle1" fontWeight="bold">
                   {notification.title}
                 </Typography>
@@ -130,12 +145,17 @@ const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, i
                 {notification.message}
               </Typography>
               <Collapse in={expanded} timeout="auto" unmountOnExit>
-                <Box sx={{ 
-                  mt: 1, 
-                  p: 1.5, 
-                  bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-                  borderRadius: 1 
-                }}>
+                <Box
+                  sx={{
+                    mt: 1,
+                    p: 1.5,
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(255,255,255,0.05)"
+                        : "rgba(0,0,0,0.02)",
+                    borderRadius: 1,
+                  }}
+                >
                   <Typography variant="body2" color="text.secondary">
                     {notification.details}
                   </Typography>
@@ -146,20 +166,32 @@ const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, i
                   size="small"
                   onClick={() => setExpanded(!expanded)}
                   sx={{ mt: 1 }}
-                  startIcon={expanded ? <CloseIcon fontSize="small" /> : <InfoIcon fontSize="small" />}
+                  startIcon={
+                    expanded ? (
+                      <CloseIcon fontSize="small" />
+                    ) : (
+                      <InfoIcon fontSize="small" />
+                    )
+                  }
                 >
-                  {expanded ? 'Show Less' : 'Show Details'}
+                  {expanded ? "Show Less" : "Show Details"}
                 </Button>
               )}
             </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <Tooltip title="Mark as read">
-                <IconButton size="small" onClick={() => onDismiss(notification.id)}>
+                <IconButton
+                  size="small"
+                  onClick={() => onDismiss(notification.id)}
+                >
                   <MarkReadIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Tooltip title="Delete">
-                <IconButton size="small" onClick={() => onDelete(notification.id)}>
+                <IconButton
+                  size="small"
+                  onClick={() => onDelete(notification.id)}
+                >
                   <DeleteIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -171,25 +203,32 @@ const NotificationItem = ({ notification, onDismiss, onDelete, onToggleSelect, i
   );
 };
 
-const NotificationGroup = ({ date, notifications, onDismiss, onDelete, onToggleSelect, selectedIds }) => {
+const NotificationGroup = ({
+  date,
+  notifications,
+  onDismiss,
+  onDelete,
+  onToggleSelect,
+  selectedIds,
+}) => {
   const theme = useTheme();
-  const formattedDate = new Date(date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
+  const formattedDate = new Date(date).toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
   });
 
   return (
     <Box sx={{ mb: 4 }}>
-      <Typography 
-        variant="subtitle1" 
-        sx={{ 
-          mb: 2, 
-          color: 'text.secondary',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1
+      <Typography
+        variant="subtitle1"
+        sx={{
+          mb: 2,
+          color: "text.secondary",
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
         }}
       >
         <NotificationsIcon fontSize="small" />
@@ -213,12 +252,12 @@ const NotificationGroup = ({ date, notifications, onDismiss, onDelete, onToggleS
 
 const Messages = ({ isGuest }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [notifications, setNotifications] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
   const [alert, setAlert] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('newest');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkActionAnchor, setBulkActionAnchor] = useState(null);
   const [notificationSettings, setNotificationSettings] = useState({
@@ -232,50 +271,53 @@ const Messages = ({ isGuest }) => {
     const mockNotifications = [
       {
         id: 1,
-        type: 'error',
-        title: 'Device Fault Detected',
-        message: 'Living Room AC is not responding',
-        details: 'The device has been unresponsive for the past 15 minutes. Please check the power supply and network connection.',
+        type: "error",
+        title: "Device Fault Detected",
+        message: "Living Room AC is not responding",
+        details:
+          "The device has been unresponsive for the past 15 minutes. Please check the power supply and network connection.",
         timestamp: new Date(Date.now() - 1000 * 60 * 5),
-        category: 'device'
+        category: "device",
       },
       {
         id: 2,
-        type: 'warning',
-        title: 'High Energy Consumption',
-        message: 'Unusual energy spike detected in Kitchen',
-        details: 'Energy consumption is 50% higher than usual. Current usage: 2.5kW vs usual 1.2kW at this time.',
+        type: "warning",
+        title: "High Energy Consumption",
+        message: "Unusual energy spike detected in Kitchen",
+        details:
+          "Energy consumption is 50% higher than usual. Current usage: 2.5kW vs usual 1.2kW at this time.",
         timestamp: new Date(Date.now() - 1000 * 60 * 30),
-        category: 'energy'
+        category: "energy",
       },
       {
         id: 3,
-        type: 'warning',
-        title: 'Security Alert',
-        message: 'Motion detected in Living Room while in Away Mode',
-        details: 'Motion sensor triggered at 3:42 PM. Last known status: System Armed.',
+        type: "warning",
+        title: "Security Alert",
+        message: "Motion detected in Living Room while in Away Mode",
+        details:
+          "Motion sensor triggered at 3:42 PM. Last known status: System Armed.",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2),
-        category: 'security'
+        category: "security",
       },
       {
         id: 4,
-        type: 'info',
-        title: 'Device Online',
-        message: 'Bedroom Light is back online',
+        type: "info",
+        title: "Device Online",
+        message: "Bedroom Light is back online",
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5),
-        category: 'device'
+        category: "device",
       },
     ];
-    
+
     setNotifications(mockNotifications);
   }, []);
 
   const filteredNotifications = notifications
-    .filter(notification => {
-      if (filter === 'all') return true;
+    .filter((notification) => {
+      if (filter === "all") return true;
       return notification.category === filter;
     })
-    .filter(notification => {
+    .filter((notification) => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
       return (
@@ -285,57 +327,75 @@ const Messages = ({ isGuest }) => {
       );
     })
     .sort((a, b) => {
-      if (sortBy === 'newest') return b.timestamp - a.timestamp;
-      if (sortBy === 'oldest') return a.timestamp - b.timestamp;
+      if (sortBy === "newest") return b.timestamp - a.timestamp;
+      if (sortBy === "oldest") return a.timestamp - b.timestamp;
       return 0;
     });
 
-  const groupedNotifications = filteredNotifications.reduce((groups, notification) => {
-    const date = new Date(notification.timestamp).toDateString();
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(notification);
-    return groups;
-  }, {});
+  const groupedNotifications = filteredNotifications.reduce(
+    (groups, notification) => {
+      const date = new Date(notification.timestamp).toDateString();
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(notification);
+      return groups;
+    },
+    {},
+  );
 
   const handleDismiss = (id) => {
-    setNotifications(notifications.map(n => 
-      n.id === id ? { ...n, read: true } : n
-    ));
-    setAlert({ type: 'success', message: 'Notification marked as read' });
+    setNotifications(
+      notifications.map((n) => (n.id === id ? { ...n, read: true } : n)),
+    );
+    setAlert({ type: "success", message: "Notification marked as read" });
   };
 
   const handleDelete = (id) => {
-    setNotifications(notifications.filter(n => n.id !== id));
-    setAlert({ type: 'success', message: 'Notification deleted' });
+    setNotifications(notifications.filter((n) => n.id !== id));
+    setAlert({ type: "success", message: "Notification deleted" });
   };
 
   const handleSelectAll = () => {
     if (selectedIds.length === filteredNotifications.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredNotifications.map(n => n.id));
+      setSelectedIds(filteredNotifications.map((n) => n.id));
     }
   };
 
   const handleBulkAction = (action) => {
     switch (action) {
-      case 'mark-read':
-        setNotifications(notifications.map(n => 
-          selectedIds.includes(n.id) ? { ...n, read: true } : n
-        ));
-        setAlert({ type: 'success', message: 'Selected notifications marked as read' });
+      case "mark-read":
+        setNotifications(
+          notifications.map((n) =>
+            selectedIds.includes(n.id) ? { ...n, read: true } : n,
+          ),
+        );
+        setAlert({
+          type: "success",
+          message: "Selected notifications marked as read",
+        });
         break;
-      case 'delete':
-        setNotifications(notifications.filter(n => !selectedIds.includes(n.id)));
-        setAlert({ type: 'success', message: 'Selected notifications deleted' });
+      case "delete":
+        setNotifications(
+          notifications.filter((n) => !selectedIds.includes(n.id)),
+        );
+        setAlert({
+          type: "success",
+          message: "Selected notifications deleted",
+        });
         break;
-      case 'archive':
-        setNotifications(notifications.map(n => 
-          selectedIds.includes(n.id) ? { ...n, archived: true } : n
-        ));
-        setAlert({ type: 'success', message: 'Selected notifications archived' });
+      case "archive":
+        setNotifications(
+          notifications.map((n) =>
+            selectedIds.includes(n.id) ? { ...n, archived: true } : n,
+          ),
+        );
+        setAlert({
+          type: "success",
+          message: "Selected notifications archived",
+        });
         break;
     }
     setSelectedIds([]);
@@ -344,11 +404,11 @@ const Messages = ({ isGuest }) => {
 
   const handleClearAll = () => {
     setNotifications([]);
-    setAlert({ type: 'success', message: 'All notifications cleared' });
+    setAlert({ type: "success", message: "All notifications cleared" });
   };
 
   const handleRefresh = () => {
-    setAlert({ type: 'success', message: 'Notifications refreshed' });
+    setAlert({ type: "success", message: "Notifications refreshed" });
   };
 
   const handleCloseAlert = () => {
@@ -360,28 +420,32 @@ const Messages = ({ isGuest }) => {
       ...notificationSettings,
       [setting]: event.target.checked,
     });
-    setAlert({ type: 'success', message: `Notification settings updated` });
+    setAlert({ type: "success", message: `Notification settings updated` });
   };
 
   return (
-    <Box sx={{ maxWidth: 1200, mx: 'auto', p: { xs: 2, sm: 3 } }}>
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'stretch', sm: 'center' }, 
-        mb: 3,
-        gap: 2
-      }}>
-        <Typography variant="h4" component="h1" sx={{ fontWeight: 'bold' }}>
+    <Box sx={{ maxWidth: 1200, mx: "auto", p: { xs: 2, sm: 3 } }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          mb: 3,
+          gap: 2,
+        }}
+      >
+        <Typography variant="h4" component="h1" sx={{ fontWeight: "bold" }}>
           Notifications
         </Typography>
-        <Box sx={{ 
-          display: 'flex', 
-          gap: 1,
-          flexDirection: { xs: 'row', sm: 'row' },
-          width: { xs: '100%', sm: 'auto' }
-        }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            flexDirection: { xs: "row", sm: "row" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <Button
             startIcon={<RefreshIcon />}
             onClick={handleRefresh}
@@ -405,13 +469,18 @@ const Messages = ({ isGuest }) => {
 
       <Card sx={{ mb: 4, borderRadius: 2 }}>
         <CardContent>
-          <Box sx={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            mb: 2
-          }}>
-            <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mb: 2,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{ display: "flex", alignItems: "center", gap: 1 }}
+            >
               <NotificationsIcon color="primary" />
               Notification Settings
             </Typography>
@@ -421,7 +490,9 @@ const Messages = ({ isGuest }) => {
                 onClick={handleSelectAll}
                 disabled={filteredNotifications.length === 0}
               >
-                {selectedIds.length === filteredNotifications.length ? 'Deselect All' : 'Select All'}
+                {selectedIds.length === filteredNotifications.length
+                  ? "Deselect All"
+                  : "Select All"}
               </Button>
               {selectedIds.length > 0 && (
                 <Button
@@ -438,32 +509,37 @@ const Messages = ({ isGuest }) => {
             open={Boolean(bulkActionAnchor)}
             onClose={() => setBulkActionAnchor(null)}
           >
-            <MenuItem onClick={() => handleBulkAction('mark-read')}>
+            <MenuItem onClick={() => handleBulkAction("mark-read")}>
               <MarkReadIcon sx={{ mr: 1 }} /> Mark as Read
             </MenuItem>
-            <MenuItem onClick={() => handleBulkAction('archive')}>
+            <MenuItem onClick={() => handleBulkAction("archive")}>
               <ArchiveIcon sx={{ mr: 1 }} /> Archive
             </MenuItem>
-            <MenuItem onClick={() => handleBulkAction('delete')} sx={{ color: 'error.main' }}>
+            <MenuItem
+              onClick={() => handleBulkAction("delete")}
+              sx={{ color: "error.main" }}
+            >
               <DeleteIcon sx={{ mr: 1 }} /> Delete
             </MenuItem>
           </Menu>
-          <Box sx={{ 
-            display: 'flex', 
-            flexWrap: 'wrap', 
-            gap: 3,
-            mt: 2
-          }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 3,
+              mt: 2,
+            }}
+          >
             <FormControlLabel
               control={
                 <Switch
                   checked={notificationSettings.email}
-                  onChange={handleNotificationSettingChange('email')}
+                  onChange={handleNotificationSettingChange("email")}
                   color="primary"
                 />
               }
               label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <EmailIcon sx={{ mr: 1 }} />
                   Email Notifications
                 </Box>
@@ -473,12 +549,12 @@ const Messages = ({ isGuest }) => {
               control={
                 <Switch
                   checked={notificationSettings.sms}
-                  onChange={handleNotificationSettingChange('sms')}
+                  onChange={handleNotificationSettingChange("sms")}
                   color="primary"
                 />
               }
               label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <SmsIcon sx={{ mr: 1 }} />
                   SMS Notifications
                 </Box>
@@ -488,12 +564,12 @@ const Messages = ({ isGuest }) => {
               control={
                 <Switch
                   checked={notificationSettings.push}
-                  onChange={handleNotificationSettingChange('push')}
+                  onChange={handleNotificationSettingChange("push")}
                   color="primary"
                 />
               }
               label={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Box sx={{ display: "flex", alignItems: "center" }}>
                   <PushIcon sx={{ mr: 1 }} />
                   Push Notifications
                 </Box>
@@ -503,37 +579,45 @@ const Messages = ({ isGuest }) => {
         </CardContent>
       </Card>
 
-      <Box sx={{ 
-        display: 'flex', 
-        flexDirection: { xs: 'column', sm: 'row' },
-        justifyContent: 'space-between', 
-        alignItems: { xs: 'stretch', sm: 'center' }, 
-        mb: 3,
-        gap: 2
-      }}>
-        <Box sx={{ 
-          display: 'flex', 
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", sm: "row" },
+          justifyContent: "space-between",
+          alignItems: { xs: "stretch", sm: "center" },
+          mb: 3,
           gap: 2,
-          flexDirection: { xs: 'column', sm: 'row' },
-          width: { xs: '100%', sm: 'auto' }
-        }}>
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexDirection: { xs: "column", sm: "row" },
+            width: { xs: "100%", sm: "auto" },
+          }}
+        >
           <TextField
             size="small"
             placeholder="Search notifications..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />,
+              startAdornment: (
+                <SearchIcon sx={{ mr: 1, color: "text.secondary" }} />
+              ),
             }}
-            sx={{ minWidth: { xs: '100%', sm: 200 } }}
+            sx={{ minWidth: { xs: "100%", sm: 200 } }}
           />
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
             <InputLabel>Filter by</InputLabel>
             <Select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               label="Filter by"
-              startAdornment={<FilterIcon sx={{ mr: 1, color: 'text.secondary' }} />}
+              startAdornment={
+                <FilterIcon sx={{ mr: 1, color: "text.secondary" }} />
+              }
             >
               <MenuItem value="all">All Notifications</MenuItem>
               <MenuItem value="device">Device Faults</MenuItem>
@@ -541,13 +625,15 @@ const Messages = ({ isGuest }) => {
               <MenuItem value="security">Security Alerts</MenuItem>
             </Select>
           </FormControl>
-          <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
+          <FormControl size="small" sx={{ minWidth: { xs: "100%", sm: 150 } }}>
             <InputLabel>Sort by</InputLabel>
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               label="Sort by"
-              startAdornment={<SortIcon sx={{ mr: 1, color: 'text.secondary' }} />}
+              startAdornment={
+                <SortIcon sx={{ mr: 1, color: "text.secondary" }} />
+              }
             >
               <MenuItem value="newest">Newest First</MenuItem>
               <MenuItem value="oldest">Oldest First</MenuItem>
@@ -555,30 +641,36 @@ const Messages = ({ isGuest }) => {
           </FormControl>
         </Box>
         <Typography variant="body2" color="text.secondary">
-          {filteredNotifications.length} {filteredNotifications.length === 1 ? 'notification' : 'notifications'} found
+          {filteredNotifications.length}{" "}
+          {filteredNotifications.length === 1
+            ? "notification"
+            : "notifications"}{" "}
+          found
         </Typography>
       </Box>
 
       <AnimatePresence>
         {filteredNotifications.length > 0 ? (
           <Box>
-            {Object.entries(groupedNotifications).map(([date, notifications]) => (
-              <NotificationGroup
-                key={date}
-                date={date}
-                notifications={notifications}
-                onDismiss={handleDismiss}
-                onDelete={handleDelete}
-                onToggleSelect={(id) => {
-                  setSelectedIds(prev => 
-                    prev.includes(id) 
-                      ? prev.filter(n => n !== id)
-                      : [...prev, id]
-                  );
-                }}
-                selectedIds={selectedIds}
-              />
-            ))}
+            {Object.entries(groupedNotifications).map(
+              ([date, notifications]) => (
+                <NotificationGroup
+                  key={date}
+                  date={date}
+                  notifications={notifications}
+                  onDismiss={handleDismiss}
+                  onDelete={handleDelete}
+                  onToggleSelect={(id) => {
+                    setSelectedIds((prev) =>
+                      prev.includes(id)
+                        ? prev.filter((n) => n !== id)
+                        : [...prev, id],
+                    );
+                  }}
+                  selectedIds={selectedIds}
+                />
+              ),
+            )}
           </Box>
         ) : (
           <motion.div
@@ -587,24 +679,31 @@ const Messages = ({ isGuest }) => {
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.3 }}
           >
-            <Card sx={{ 
-              p: 4, 
-              textAlign: 'center',
-              bgcolor: theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              borderRadius: 2
-            }}>
-              <NotificationsIcon sx={{ 
-                fontSize: 64, 
-                color: 'text.secondary', 
-                mb: 2,
-                opacity: 0.5
-              }} />
+            <Card
+              sx={{
+                p: 4,
+                textAlign: "center",
+                bgcolor:
+                  theme.palette.mode === "dark"
+                    ? "rgba(255,255,255,0.05)"
+                    : "rgba(0,0,0,0.02)",
+                borderRadius: 2,
+              }}
+            >
+              <NotificationsIcon
+                sx={{
+                  fontSize: 64,
+                  color: "text.secondary",
+                  mb: 2,
+                  opacity: 0.5,
+                }}
+              />
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No notifications to display
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {filter === 'all' 
-                  ? 'You\'re all caught up!' 
+                {filter === "all"
+                  ? "You're all caught up!"
                   : `No ${filter} notifications found.`}
               </Typography>
             </Card>
@@ -616,18 +715,18 @@ const Messages = ({ isGuest }) => {
         open={!!alert}
         autoHideDuration={4000}
         onClose={handleCloseAlert}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         TransitionComponent={Zoom}
       >
-        <Alert 
-          onClose={handleCloseAlert} 
-          severity={alert?.type} 
+        <Alert
+          onClose={handleCloseAlert}
+          severity={alert?.type}
           variant="filled"
-          sx={{ 
-            width: '100%',
-            backdropFilter: 'blur(8px)',
-            '& .MuiAlert-icon': {
-              animation: 'pulse 2s infinite',
+          sx={{
+            width: "100%",
+            backdropFilter: "blur(8px)",
+            "& .MuiAlert-icon": {
+              animation: "pulse 2s infinite",
             },
           }}
         >

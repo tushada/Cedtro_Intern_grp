@@ -1,27 +1,27 @@
-import React, { useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Card, 
-  CardContent, 
-  Switch, 
-  FormControlLabel, 
-  Button, 
-  Divider, 
-  List, 
-  ListItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Select, 
-  MenuItem, 
-  Dialog, 
-  DialogTitle, 
-  DialogContent, 
+import React, { useState } from "react";
+import {
+  Box,
+  Typography,
+  Card,
+  CardContent,
+  Switch,
+  FormControlLabel,
+  Button,
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Select,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
   DialogActions,
   useTheme,
   Snackbar,
-  Alert
-} from '@mui/material';
+  Alert,
+} from "@mui/material";
 import {
   AccountCircle,
   DarkMode,
@@ -36,25 +36,28 @@ import {
   Add,
   Support,
   Security,
-  Rule
-} from '@mui/icons-material';
+  Rule,
+} from "@mui/icons-material";
 
 const Settings = ({ onThemeChange, onLogout }) => {
   const theme = useTheme();
   const [notifications, setNotifications] = useState(true);
   const [sounds, setSounds] = useState(true);
-  const [language, setLanguage] = useState('English');
+  const [language, setLanguage] = useState("English");
   const [languageChanged, setLanguageChanged] = useState(false);
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '' });
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
 
   const handleDarkModeToggle = (event) => {
     const isDarkMode = event.target.checked;
-    onThemeChange(isDarkMode ? 'dark' : 'light');
+    onThemeChange(isDarkMode ? "dark" : "light");
   };
 
   const handleNavigate = (path) => {
-    setSnackbar({ open: true, message: `${path} would be opened in a real app` });
+    setSnackbar({
+      open: true,
+      message: `${path} would be opened in a real app`,
+    });
   };
 
   const handleLogout = () => {
@@ -65,8 +68,8 @@ const Settings = ({ onThemeChange, onLogout }) => {
   const SettingSection = ({ title, icon, children }) => (
     <Card sx={{ mb: 3, borderRadius: 2, boxShadow: 1 }}>
       <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          {React.cloneElement(icon, { color: 'primary', sx: { mr: 1 } })}
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          {React.cloneElement(icon, { color: "primary", sx: { mr: 1 } })}
           <Typography variant="h6" component="h2">
             {title}
           </Typography>
@@ -78,7 +81,7 @@ const Settings = ({ onThemeChange, onLogout }) => {
   );
 
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: 'auto' }}>
+    <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Settings
       </Typography>
@@ -86,16 +89,22 @@ const Settings = ({ onThemeChange, onLogout }) => {
       {/* Account Section */}
       <SettingSection title="Account" icon={<AccountCircle />}>
         <List>
-          <ListItem button onClick={() => handleNavigate('change-password')}>
-            <ListItemIcon><Lock /></ListItemIcon>
+          <ListItem button onClick={() => handleNavigate("change-password")}>
+            <ListItemIcon>
+              <Lock />
+            </ListItemIcon>
             <ListItemText primary="Change Password" />
           </ListItem>
-          <ListItem button onClick={() => handleNavigate('edit-profile')}>
-            <ListItemIcon><Edit /></ListItemIcon>
+          <ListItem button onClick={() => handleNavigate("edit-profile")}>
+            <ListItemIcon>
+              <Edit />
+            </ListItemIcon>
             <ListItemText primary="Edit Profile" />
           </ListItem>
           <ListItem button onClick={() => setLogoutDialogOpen(true)}>
-            <ListItemIcon><Logout /></ListItemIcon>
+            <ListItemIcon>
+              <Logout />
+            </ListItemIcon>
             <ListItemText primary="Logout" />
           </ListItem>
         </List>
@@ -106,7 +115,7 @@ const Settings = ({ onThemeChange, onLogout }) => {
         <FormControlLabel
           control={
             <Switch
-              checked={theme.palette.mode === 'dark'}
+              checked={theme.palette.mode === "dark"}
               onChange={handleDarkModeToggle}
               color="primary"
             />
@@ -114,9 +123,11 @@ const Settings = ({ onThemeChange, onLogout }) => {
           label="Dark Mode"
           sx={{ mb: 2 }}
         />
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <Language sx={{ mr: 1, color: 'text.secondary' }} />
-          <Typography variant="body1" sx={{ minWidth: 120 }}>Language</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+          <Language sx={{ mr: 1, color: "text.secondary" }} />
+          <Typography variant="body1" sx={{ minWidth: 120 }}>
+            Language
+          </Typography>
           <Select
             value={language}
             onChange={(e) => {
@@ -126,7 +137,7 @@ const Settings = ({ onThemeChange, onLogout }) => {
               // Show a message when language is changed
               setSnackbar({
                 open: true,
-                message: `Language changed to ${newLanguage}. App restart may be required.`
+                message: `Language changed to ${newLanguage}. App restart may be required.`,
               });
             }}
             variant="outlined"
@@ -140,7 +151,11 @@ const Settings = ({ onThemeChange, onLogout }) => {
             <MenuItem value="French">Français</MenuItem>
           </Select>
           {languageChanged && (
-            <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
+            <Typography
+              variant="caption"
+              color="primary"
+              sx={{ mt: 1, display: "block" }}
+            >
               Note: Some language changes may require app restart to take effect
             </Typography>
           )}
@@ -158,7 +173,7 @@ const Settings = ({ onThemeChange, onLogout }) => {
             />
           }
           label="Enable Notifications"
-          sx={{ display: 'block', mb: 1 }}
+          sx={{ display: "block", mb: 1 }}
         />
         <FormControlLabel
           control={
@@ -179,14 +194,14 @@ const Settings = ({ onThemeChange, onLogout }) => {
           variant="outlined"
           startIcon={<Devices />}
           sx={{ mr: 2, mb: 2 }}
-          onClick={() => handleNavigate('manage-devices')}
+          onClick={() => handleNavigate("manage-devices")}
         >
           Manage Paired Devices
         </Button>
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => handleNavigate('add-device')}
+          onClick={() => handleNavigate("add-device")}
         >
           Add New Device
         </Button>
@@ -197,16 +212,16 @@ const Settings = ({ onThemeChange, onLogout }) => {
         <Button
           variant="text"
           startIcon={<Rule />}
-          sx={{ display: 'block', textAlign: 'left', mb: 1 }}
-          onClick={() => handleNavigate('automation-rules')}
+          sx={{ display: "block", textAlign: "left", mb: 1 }}
+          onClick={() => handleNavigate("automation-rules")}
         >
           View/Edit Automation Rules
         </Button>
         <Button
           variant="text"
           startIcon={<Schedule />}
-          sx={{ display: 'block', textAlign: 'left' }}
-          onClick={() => handleNavigate('scheduled-tasks')}
+          sx={{ display: "block", textAlign: "left" }}
+          onClick={() => handleNavigate("scheduled-tasks")}
         >
           View Scheduled Tasks
         </Button>
@@ -220,23 +235,26 @@ const Settings = ({ onThemeChange, onLogout }) => {
         <Button
           variant="text"
           startIcon={<Support />}
-          sx={{ display: 'block', textAlign: 'left', mb: 1 }}
-          onClick={() => handleNavigate('support')}
+          sx={{ display: "block", textAlign: "left", mb: 1 }}
+          onClick={() => handleNavigate("support")}
         >
           Contact Support
         </Button>
         <Button
           variant="text"
           startIcon={<Security />}
-          sx={{ display: 'block', textAlign: 'left' }}
-          onClick={() => handleNavigate('privacy')}
+          sx={{ display: "block", textAlign: "left" }}
+          onClick={() => handleNavigate("privacy")}
         >
           Privacy Policy / Terms of Use
         </Button>
       </SettingSection>
 
       {/* Logout Confirmation Dialog */}
-      <Dialog open={logoutDialogOpen} onClose={() => setLogoutDialogOpen(false)}>
+      <Dialog
+        open={logoutDialogOpen}
+        onClose={() => setLogoutDialogOpen(false)}
+      >
         <DialogTitle>Confirm Logout</DialogTitle>
         <DialogContent>
           <Typography>Are you sure you want to logout?</Typography>
@@ -252,10 +270,13 @@ const Settings = ({ onThemeChange, onLogout }) => {
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSnackbar(prev => ({ ...prev, open: false }))} severity="info">
+        <Alert
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          severity="info"
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

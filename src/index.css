@@ -31,11 +31,12 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
-    opacity: .5;
+    opacity: 0.5;
   }
 }
 
@@ -108,7 +109,8 @@
   @apply bg-gray-400 rounded-full hover:bg-gray-500 transition-colors duration-200;
 }
 
-body, #root {
+body,
+#root {
   background: #181a20; /* or your dashboard's main background color */
   min-height: 100vh;
   min-width: 100vw;

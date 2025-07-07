@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -20,8 +20,8 @@ import {
   LinearProgress,
   Tooltip,
   CircularProgress,
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
 import {
   LineChart,
   Line,
@@ -34,74 +34,80 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ElectricBoltIcon from '@mui/icons-material/ElectricBolt';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
-import TvIcon from '@mui/icons-material/Tv';
-import ComputerIcon from '@mui/icons-material/Computer';
-import WaterDropIcon from '@mui/icons-material/WaterDrop';
-import LocalLaundryServiceIcon from '@mui/icons-material/LocalLaundryService';
-import KitchenIcon from '@mui/icons-material/Kitchen';
-import SavingsIcon from '@mui/icons-material/Savings';
-import TimelineIcon from '@mui/icons-material/Timeline';
-import CompareArrowsIcon from '@mui/icons-material/CompareArrows';
-import ParkIcon from '@mui/icons-material/Park';
-import NatureIcon from '@mui/icons-material/Nature';
-import AirIcon from '@mui/icons-material/Air';
-import WaterIcon from '@mui/icons-material/Water';
-import RecyclingIcon from '@mui/icons-material/Recycling';
-import SpeedIcon from '@mui/icons-material/Speed';
-import TimerIcon from '@mui/icons-material/Timer';
-import BoltIcon from '@mui/icons-material/Bolt';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
-import { useNavigate } from 'react-router-dom';
+} from "recharts";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import TrendingDownIcon from "@mui/icons-material/TrendingDown";
+import LightbulbIcon from "@mui/icons-material/Lightbulb";
+import AcUnitIcon from "@mui/icons-material/AcUnit";
+import TvIcon from "@mui/icons-material/Tv";
+import ComputerIcon from "@mui/icons-material/Computer";
+import WaterDropIcon from "@mui/icons-material/WaterDrop";
+import LocalLaundryServiceIcon from "@mui/icons-material/LocalLaundryService";
+import KitchenIcon from "@mui/icons-material/Kitchen";
+import SavingsIcon from "@mui/icons-material/Savings";
+import TimelineIcon from "@mui/icons-material/Timeline";
+import CompareArrowsIcon from "@mui/icons-material/CompareArrows";
+import ParkIcon from "@mui/icons-material/Park";
+import NatureIcon from "@mui/icons-material/Nature";
+import AirIcon from "@mui/icons-material/Air";
+import WaterIcon from "@mui/icons-material/Water";
+import RecyclingIcon from "@mui/icons-material/Recycling";
+import SpeedIcon from "@mui/icons-material/Speed";
+import TimerIcon from "@mui/icons-material/Timer";
+import BoltIcon from "@mui/icons-material/Bolt";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { useNavigate } from "react-router-dom";
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   borderRadius: 24,
-  background: theme.palette.mode === 'dark'
-    ? 'linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%)'
-    : 'linear-gradient(135deg, rgba(240, 249, 255, 0.95) 0%, rgba(224, 242, 254, 0.95) 100%)',
-  backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.1)'
-    : 'rgba(0, 0, 0, 0.1)'}`,
+  background:
+    theme.palette.mode === "dark"
+      ? "linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(42, 42, 42, 0.95) 100%)"
+      : "linear-gradient(135deg, rgba(240, 249, 255, 0.95) 0%, rgba(224, 242, 254, 0.95) 100%)",
+  backdropFilter: "blur(10px)",
+  border: `1px solid ${
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(0, 0, 0, 0.1)"
+  }`,
   boxShadow: theme.shadows[8],
-  position: 'relative',
+  position: "relative",
   zIndex: 1,
 }));
 
 const StatCard = styled(Card)(({ theme }) => ({
   borderRadius: 16,
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.05)'
-    : 'rgba(0, 0, 0, 0.02)',
-  backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.1)'
-    : 'rgba(0, 0, 0, 0.1)'}`,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover': {
-    transform: 'translateY(-4px)',
+  background:
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.05)"
+      : "rgba(0, 0, 0, 0.02)",
+  backdropFilter: "blur(10px)",
+  border: `1px solid ${
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(0, 0, 0, 0.1)"
+  }`,
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  "&:hover": {
+    transform: "translateY(-4px)",
     boxShadow: theme.shadows[8],
   },
 }));
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
-  '& .MuiTabs-indicator': {
+  "& .MuiTabs-indicator": {
     backgroundColor: theme.palette.primary.main,
     height: 3,
     borderRadius: 3,
   },
-  '& .MuiTab-root': {
-    textTransform: 'none',
+  "& .MuiTab-root": {
+    textTransform: "none",
     fontWeight: 600,
-    fontSize: '1rem',
+    fontSize: "1rem",
     minWidth: 100,
     padding: theme.spacing(2, 3),
   },
@@ -109,42 +115,55 @@ const StyledTabs = styled(Tabs)(({ theme }) => ({
 
 const InsightCard = styled(Card)(({ theme }) => ({
   borderRadius: 16,
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.05)'
-    : 'rgba(0, 0, 0, 0.02)',
-  backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.1)'
-    : 'rgba(0, 0, 0, 0.1)'}`,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover': {
-    transform: 'translateY(-4px)',
+  background:
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.05)"
+      : "rgba(0, 0, 0, 0.02)",
+  backdropFilter: "blur(10px)",
+  border: `1px solid ${
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(0, 0, 0, 0.1)"
+  }`,
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  "&:hover": {
+    transform: "translateY(-4px)",
     boxShadow: theme.shadows[8],
   },
 }));
 
 const PredictionCard = styled(Card)(({ theme }) => ({
   borderRadius: 16,
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.05)'
-    : 'rgba(0, 0, 0, 0.02)',
-  backdropFilter: 'blur(10px)',
-  border: `1px solid ${theme.palette.mode === 'dark'
-    ? 'rgba(255, 255, 255, 0.1)'
-    : 'rgba(0, 0, 0, 0.1)'}`,
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  '&:hover': {
-    transform: 'translateY(-4px)',
+  background:
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.05)"
+      : "rgba(0, 0, 0, 0.02)",
+  backdropFilter: "blur(10px)",
+  border: `1px solid ${
+    theme.palette.mode === "dark"
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(0, 0, 0, 0.1)"
+  }`,
+  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+  "&:hover": {
+    transform: "translateY(-4px)",
     boxShadow: theme.shadows[8],
   },
 }));
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
+const COLORS = [
+  "#0088FE",
+  "#00C49F",
+  "#FFBB28",
+  "#FF8042",
+  "#8884D8",
+  "#82CA9D",
+];
 
 const EnergyDetails = () => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const [timeRange, setTimeRange] = useState('daily');
+  const [timeRange, setTimeRange] = useState("daily");
   const [energyData, setEnergyData] = useState([]);
   const [deviceConsumption, setDeviceConsumption] = useState([]);
   const [error, setError] = useState(null);
@@ -164,30 +183,30 @@ const EnergyDetails = () => {
   });
   const [statistics, setStatistics] = useState({
     averageConsumption: 0,
-    peakHour: '',
-    lowestHour: '',
+    peakHour: "",
+    lowestHour: "",
     costPerUnit: 0,
     efficiencyScore: 0,
     savingsPercentage: 0,
     comparisonWithAverage: 0,
-    bestPerformingDay: '',
-    worstPerformingDay: '',
+    bestPerformingDay: "",
+    worstPerformingDay: "",
   });
 
   // Helper function to generate realistic daily pattern
   const generateDailyPattern = (hour) => {
     // Base consumption for each hour (in kWh)
     const basePattern = {
-      0: 0.3,  // Midnight - low usage
-      1: 0.2,  // 1 AM - lowest usage
-      2: 0.2,  // 2 AM - lowest usage
-      3: 0.2,  // 3 AM - lowest usage
-      4: 0.3,  // 4 AM - low usage
-      5: 0.4,  // 5 AM - rising
-      6: 0.8,  // 6 AM - morning rise
-      7: 1.2,  // 7 AM - breakfast peak
-      8: 1.0,  // 8 AM - work hours
-      9: 0.9,  // 9 AM - work hours
+      0: 0.3, // Midnight - low usage
+      1: 0.2, // 1 AM - lowest usage
+      2: 0.2, // 2 AM - lowest usage
+      3: 0.2, // 3 AM - lowest usage
+      4: 0.3, // 4 AM - low usage
+      5: 0.4, // 5 AM - rising
+      6: 0.8, // 6 AM - morning rise
+      7: 1.2, // 7 AM - breakfast peak
+      8: 1.0, // 8 AM - work hours
+      9: 0.9, // 9 AM - work hours
       10: 0.9, // 10 AM - work hours
       11: 1.1, // 11 AM - lunch preparation
       12: 1.3, // 12 PM - lunch peak
@@ -213,16 +232,16 @@ const EnergyDetails = () => {
   const getSeasonalMultiplier = (month) => {
     // Higher consumption in summer (May-July) and winter (Dec-Feb)
     const seasonalPattern = {
-      0: 1.2,  // January - winter
-      1: 1.3,  // February - winter
-      2: 1.1,  // March - spring
-      3: 1.0,  // April - spring
-      4: 1.2,  // May - summer
-      5: 1.4,  // June - summer peak
-      6: 1.3,  // July - summer
-      7: 1.1,  // August - monsoon
-      8: 1.0,  // September - monsoon
-      9: 0.9,  // October - autumn
+      0: 1.2, // January - winter
+      1: 1.3, // February - winter
+      2: 1.1, // March - spring
+      3: 1.0, // April - spring
+      4: 1.2, // May - summer
+      5: 1.4, // June - summer peak
+      6: 1.3, // July - summer
+      7: 1.1, // August - monsoon
+      8: 1.0, // September - monsoon
+      9: 0.9, // October - autumn
       10: 1.0, // November - autumn
       11: 1.2, // December - winter
     };
@@ -233,7 +252,7 @@ const EnergyDetails = () => {
   const generateDailyData = useCallback(() => {
     try {
       const days = Array.from({ length: 24 }, (_, i) => {
-        const hour = i.toString().padStart(2, '0');
+        const hour = i.toString().padStart(2, "0");
         const consumption = generateDailyPattern(i);
         const cost = consumption * 8.5; // ₹8.5 per kWh
         const peak = consumption * 1.2; // 20% higher during peak hours
@@ -249,7 +268,7 @@ const EnergyDetails = () => {
       });
       return days;
     } catch (err) {
-      setError('Error generating daily data');
+      setError("Error generating daily data");
       return [];
     }
   }, []);
@@ -257,11 +276,25 @@ const EnergyDetails = () => {
   // Updated monthly data generation
   const generateMonthlyData = useCallback(() => {
     try {
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
       return months.map((month, index) => {
         const baseConsumption = 450; // Base monthly consumption
         const seasonalMultiplier = getSeasonalMultiplier(index);
-        const consumption = baseConsumption * seasonalMultiplier * (0.9 + Math.random() * 0.2);
+        const consumption =
+          baseConsumption * seasonalMultiplier * (0.9 + Math.random() * 0.2);
         const cost = consumption * 8.5; // ₹8.5 per kWh
         const peak = consumption * 1.2;
         const offPeak = consumption * 0.8;
@@ -275,7 +308,7 @@ const EnergyDetails = () => {
         };
       });
     } catch (err) {
-      setError('Error generating monthly data');
+      setError("Error generating monthly data");
       return [];
     }
   }, []);
@@ -283,12 +316,15 @@ const EnergyDetails = () => {
   // Updated yearly data generation
   const generateYearlyData = useCallback(() => {
     try {
-      const years = ['2019', '2020', '2021', '2022', '2023'];
+      const years = ["2019", "2020", "2021", "2022", "2023"];
       const baseConsumption = 5400; // Base yearly consumption
       const yearlyGrowth = 0.05; // 5% yearly growth
 
       return years.map((year, index) => {
-        const consumption = baseConsumption * Math.pow(1 + yearlyGrowth, index) * (0.95 + Math.random() * 0.1);
+        const consumption =
+          baseConsumption *
+          Math.pow(1 + yearlyGrowth, index) *
+          (0.95 + Math.random() * 0.1);
         const cost = consumption * 8.5; // ₹8.5 per kWh
         const peak = consumption * 1.2;
         const offPeak = consumption * 0.8;
@@ -302,7 +338,7 @@ const EnergyDetails = () => {
         };
       });
     } catch (err) {
-      setError('Error generating yearly data');
+      setError("Error generating yearly data");
       return [];
     }
   }, []);
@@ -311,15 +347,15 @@ const EnergyDetails = () => {
   const generateDeviceConsumption = useCallback(() => {
     try {
       return [
-        { name: 'Air Conditioning', value: 42, icon: <AcUnitIcon /> },
-        { name: 'Lighting', value: 18, icon: <LightbulbIcon /> },
-        { name: 'Entertainment', value: 12, icon: <TvIcon /> },
-        { name: 'Computers', value: 8, icon: <ComputerIcon /> },
-        { name: 'Water Heating', value: 10, icon: <WaterDropIcon /> },
-        { name: 'Laundry', value: 10, icon: <LocalLaundryServiceIcon /> },
+        { name: "Air Conditioning", value: 42, icon: <AcUnitIcon /> },
+        { name: "Lighting", value: 18, icon: <LightbulbIcon /> },
+        { name: "Entertainment", value: 12, icon: <TvIcon /> },
+        { name: "Computers", value: 8, icon: <ComputerIcon /> },
+        { name: "Water Heating", value: 10, icon: <WaterDropIcon /> },
+        { name: "Laundry", value: 10, icon: <LocalLaundryServiceIcon /> },
       ];
     } catch (err) {
-      setError('Error generating device consumption data');
+      setError("Error generating device consumption data");
       return [];
     }
   }, []);
@@ -327,10 +363,11 @@ const EnergyDetails = () => {
   // Updated prediction calculations
   const calculatePredictions = useCallback((data) => {
     try {
-      const lastMonthAvg = data.slice(-3).reduce((sum, item) => sum + item.consumption, 0) / 3;
+      const lastMonthAvg =
+        data.slice(-3).reduce((sum, item) => sum + item.consumption, 0) / 3;
       const growthRate = 0.03; // 3% monthly growth rate (more realistic)
       const seasonalFactor = getSeasonalMultiplier(new Date().getMonth());
-      
+
       return {
         nextMonth: lastMonthAvg * (1 + growthRate) * seasonalFactor,
         nextYear: lastMonthAvg * Math.pow(1 + growthRate, 12) * seasonalFactor,
@@ -338,7 +375,7 @@ const EnergyDetails = () => {
         carbonFootprint: lastMonthAvg * 0.82, // kg of CO2 per kWh (more accurate)
       };
     } catch (err) {
-      console.error('Error calculating predictions:', err);
+      console.error("Error calculating predictions:", err);
       return {
         nextMonth: 0,
         nextYear: 0,
@@ -372,36 +409,53 @@ const EnergyDetails = () => {
   // Helper function to calculate statistics
   const calculateStatistics = useCallback((data) => {
     try {
-      const consumptionValues = data.map(item => item.consumption);
-      const costValues = data.map(item => item.cost);
-      
+      const consumptionValues = data.map((item) => item.consumption);
+      const costValues = data.map((item) => item.cost);
+
       // Find peak and lowest hours
-      const peakIndex = consumptionValues.indexOf(Math.max(...consumptionValues));
-      const lowestIndex = consumptionValues.indexOf(Math.min(...consumptionValues));
-      
+      const peakIndex = consumptionValues.indexOf(
+        Math.max(...consumptionValues),
+      );
+      const lowestIndex = consumptionValues.indexOf(
+        Math.min(...consumptionValues),
+      );
+
       // Calculate averages
-      const avgConsumption = consumptionValues.reduce((a, b) => a + b, 0) / consumptionValues.length;
+      const avgConsumption =
+        consumptionValues.reduce((a, b) => a + b, 0) / consumptionValues.length;
       const avgCost = costValues.reduce((a, b) => a + b, 0) / costValues.length;
-      
+
       // Calculate efficiency score (0-100)
       const maxConsumption = Math.max(...consumptionValues);
       const minConsumption = Math.min(...consumptionValues);
-      const efficiencyScore = 100 - ((avgConsumption - minConsumption) / (maxConsumption - minConsumption) * 100);
-      
+      const efficiencyScore =
+        100 -
+        ((avgConsumption - minConsumption) /
+          (maxConsumption - minConsumption)) *
+          100;
+
       // Calculate savings percentage
       const savingsPercentage = 15 + Math.random() * 10; // Random between 15-25%
-      
+
       // Calculate comparison with average
       const comparisonWithAverage = -5 + Math.random() * 10; // Random between -5 to +5%
-      
+
       // Find best and worst performing days
-      const bestDay = data[lowestIndex].hour || data[lowestIndex].month || data[lowestIndex].year;
-      const worstDay = data[peakIndex].hour || data[peakIndex].month || data[peakIndex].year;
+      const bestDay =
+        data[lowestIndex].hour ||
+        data[lowestIndex].month ||
+        data[lowestIndex].year;
+      const worstDay =
+        data[peakIndex].hour || data[peakIndex].month || data[peakIndex].year;
 
       return {
         averageConsumption: parseFloat(avgConsumption.toFixed(2)),
-        peakHour: data[peakIndex].hour || data[peakIndex].month || data[peakIndex].year,
-        lowestHour: data[lowestIndex].hour || data[lowestIndex].month || data[lowestIndex].year,
+        peakHour:
+          data[peakIndex].hour || data[peakIndex].month || data[peakIndex].year,
+        lowestHour:
+          data[lowestIndex].hour ||
+          data[lowestIndex].month ||
+          data[lowestIndex].year,
         costPerUnit: parseFloat((avgCost / avgConsumption).toFixed(2)),
         efficiencyScore: parseFloat(efficiencyScore.toFixed(1)),
         savingsPercentage: parseFloat(savingsPercentage.toFixed(1)),
@@ -410,17 +464,17 @@ const EnergyDetails = () => {
         worstPerformingDay: worstDay,
       };
     } catch (err) {
-      console.error('Error calculating statistics:', err);
+      console.error("Error calculating statistics:", err);
       return {
         averageConsumption: 0,
-        peakHour: '',
-        lowestHour: '',
+        peakHour: "",
+        lowestHour: "",
         costPerUnit: 0,
         efficiencyScore: 0,
         savingsPercentage: 0,
         comparisonWithAverage: 0,
-        bestPerformingDay: '',
-        worstPerformingDay: '',
+        bestPerformingDay: "",
+        worstPerformingDay: "",
       };
     }
   }, []);
@@ -432,29 +486,33 @@ const EnergyDetails = () => {
         setError(null);
         let newEnergyData;
         switch (timeRange) {
-          case 'daily':
+          case "daily":
             newEnergyData = generateDailyData();
             break;
-          case 'monthly':
+          case "monthly":
             newEnergyData = generateMonthlyData();
             break;
-          case 'yearly':
+          case "yearly":
             newEnergyData = generateYearlyData();
             break;
           default:
             newEnergyData = generateDailyData();
         }
-        
+
         const newDeviceConsumption = generateDeviceConsumption();
-        
+
         if (newEnergyData.length === 0 || newDeviceConsumption.length === 0) {
-          throw new Error('Failed to generate data');
+          throw new Error("Failed to generate data");
         }
 
         setEnergyData(newEnergyData);
         setDeviceConsumption(newDeviceConsumption);
         setPredictions(calculatePredictions(newEnergyData));
-        setEnvironmentalImpact(generateEnvironmentalImpact(newEnergyData.reduce((sum, item) => sum + item.consumption, 0)));
+        setEnvironmentalImpact(
+          generateEnvironmentalImpact(
+            newEnergyData.reduce((sum, item) => sum + item.consumption, 0),
+          ),
+        );
         setStatistics(calculateStatistics(newEnergyData));
       } catch (err) {
         setError(err.message);
@@ -464,15 +522,24 @@ const EnergyDetails = () => {
     };
 
     loadData();
-  }, [timeRange, generateDailyData, generateMonthlyData, generateYearlyData, generateDeviceConsumption, calculatePredictions, generateEnvironmentalImpact, calculateStatistics]);
+  }, [
+    timeRange,
+    generateDailyData,
+    generateMonthlyData,
+    generateYearlyData,
+    generateDeviceConsumption,
+    calculatePredictions,
+    generateEnvironmentalImpact,
+    calculateStatistics,
+  ]);
 
   const handleBack = () => {
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   if (error) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box sx={{ p: 4, textAlign: "center" }}>
         <Typography color="error" variant="h6">
           {error}
         </Typography>
@@ -489,11 +556,9 @@ const EnergyDetails = () => {
 
   if (loading) {
     return (
-      <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Box sx={{ p: 4, textAlign: "center" }}>
         <CircularProgress />
-        <Typography sx={{ mt: 2 }}>
-          Loading energy data...
-        </Typography>
+        <Typography sx={{ mt: 2 }}>Loading energy data...</Typography>
       </Box>
     );
   }
@@ -503,24 +568,34 @@ const EnergyDetails = () => {
       return (
         <Box
           sx={{
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(0, 0, 0, 0.9)' 
-              : 'rgba(255, 255, 255, 0.9)',
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(0, 0, 0, 0.9)"
+                : "rgba(255, 255, 255, 0.9)",
             padding: 2,
             borderRadius: 2,
             boxShadow: theme.shadows[4],
-            border: `1px solid ${theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(0, 0, 0, 0.1)'}`,
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? "rgba(255, 255, 255, 0.1)"
+                : "rgba(0, 0, 0, 0.1)"
+            }`,
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
-            {timeRange === 'daily' ? `Hour: ${label}` : timeRange === 'monthly' ? `Month: ${label}` : `Year: ${label}`}
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
+          >
+            {timeRange === "daily"
+              ? `Hour: ${label}`
+              : timeRange === "monthly"
+                ? `Month: ${label}`
+                : `Year: ${label}`}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#2196F3' }}>
+          <Typography variant="body2" sx={{ color: "#2196F3" }}>
             Consumption: {payload[0].value.toFixed(1)} kWh
           </Typography>
-          <Typography variant="body2" sx={{ color: '#4CAF50' }}>
+          <Typography variant="body2" sx={{ color: "#4CAF50" }}>
             Cost: ₹{payload[1].value.toFixed(0)}
           </Typography>
         </Box>
@@ -534,21 +609,30 @@ const EnergyDetails = () => {
       return (
         <Box
           sx={{
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(0, 0, 0, 0.9)' 
-              : 'rgba(255, 255, 255, 0.9)',
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(0, 0, 0, 0.9)"
+                : "rgba(255, 255, 255, 0.9)",
             padding: 2,
             borderRadius: 2,
             boxShadow: theme.shadows[4],
-            border: `1px solid ${theme.palette.mode === 'dark'
-              ? 'rgba(255, 255, 255, 0.1)'
-              : 'rgba(0, 0, 0, 0.1)'}`,
+            border: `1px solid ${
+              theme.palette.mode === "dark"
+                ? "rgba(255, 255, 255, 0.1)"
+                : "rgba(0, 0, 0, 0.1)"
+            }`,
           }}
         >
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: theme.palette.text.primary }}>
+          <Typography
+            variant="subtitle2"
+            sx={{ fontWeight: "bold", color: theme.palette.text.primary }}
+          >
             {payload[0].name}
           </Typography>
-          <Typography variant="body2" sx={{ color: theme.palette.text.secondary }}>
+          <Typography
+            variant="body2"
+            sx={{ color: theme.palette.text.secondary }}
+          >
             {payload[0].value}% of total consumption
           </Typography>
         </Box>
@@ -558,20 +642,28 @@ const EnergyDetails = () => {
   };
 
   return (
-    <Box sx={{ p: 4, minHeight: '100vh', backgroundColor: theme.palette.background.default }}>
+    <Box
+      sx={{
+        p: 4,
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
+      }}
+    >
       <IconButton
         onClick={handleBack}
         sx={{
-          position: 'fixed',
+          position: "fixed",
           top: 20,
           left: 20,
-          backgroundColor: theme.palette.mode === 'dark' 
-            ? 'rgba(255, 255, 255, 0.1)' 
-            : 'rgba(0, 0, 0, 0.1)',
-          '&:hover': {
-            backgroundColor: theme.palette.mode === 'dark' 
-              ? 'rgba(255, 255, 255, 0.2)' 
-              : 'rgba(0, 0, 0, 0.2)',
+          backgroundColor:
+            theme.palette.mode === "dark"
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(0, 0, 0, 0.1)",
+          "&:hover": {
+            backgroundColor:
+              theme.palette.mode === "dark"
+                ? "rgba(255, 255, 255, 0.2)"
+                : "rgba(0, 0, 0, 0.2)",
           },
           zIndex: 2,
         }}
@@ -583,13 +675,13 @@ const EnergyDetails = () => {
         variant="h4"
         sx={{
           mb: 4,
-          textAlign: 'center',
-          fontWeight: 'bold',
-          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
-          backgroundClip: 'text',
-          textFillColor: 'transparent',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
+          textAlign: "center",
+          fontWeight: "bold",
+          background: "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
+          backgroundClip: "text",
+          textFillColor: "transparent",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
         }}
       >
         Energy Consumption Details
@@ -615,10 +707,10 @@ const EnergyDetails = () => {
                 <Typography variant="h6" color="text.secondary" gutterBottom>
                   Total Consumption
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>
                   {statistics.averageConsumption.toFixed(1)} kWh
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TrendingUpIcon color="primary" />
                   <Typography variant="body2" color="primary">
                     +12.5% from previous period
@@ -633,10 +725,13 @@ const EnergyDetails = () => {
                 <Typography variant="h6" color="text.secondary" gutterBottom>
                   Total Cost
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
-                  ₹{energyData.reduce((sum, item) => sum + (item.cost || 0), 0).toFixed(0)}
+                <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>
+                  ₹
+                  {energyData
+                    .reduce((sum, item) => sum + (item.cost || 0), 0)
+                    .toFixed(0)}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TrendingDownIcon color="success" />
                   <Typography variant="body2" color="success.main">
                     -5.2% from previous period
@@ -651,10 +746,10 @@ const EnergyDetails = () => {
                 <Typography variant="h6" color="text.secondary" gutterBottom>
                   Peak Consumption
                 </Typography>
-                <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
+                <Typography variant="h4" sx={{ fontWeight: "bold", mb: 1 }}>
                   {statistics.peakHour}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TrendingUpIcon color="warning" />
                   <Typography variant="body2" color="warning.main">
                     +8.3% from previous period
@@ -674,31 +769,68 @@ const EnergyDetails = () => {
                   margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
                 >
                   <defs>
-                    <linearGradient id="consumptionGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2196F3" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#2196F3" stopOpacity={0.1}/>
+                    <linearGradient
+                      id="consumptionGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#2196F3" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#2196F3"
+                        stopOpacity={0.1}
+                      />
                     </linearGradient>
-                    <linearGradient id="costGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#4CAF50" stopOpacity={0.1}/>
+                    <linearGradient
+                      id="costGradient"
+                      x1="0"
+                      y1="0"
+                      x2="0"
+                      y2="1"
+                    >
+                      <stop offset="5%" stopColor="#4CAF50" stopOpacity={0.8} />
+                      <stop
+                        offset="95%"
+                        stopColor="#4CAF50"
+                        stopOpacity={0.1}
+                      />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(144, 202, 249, 0.1)" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="rgba(144, 202, 249, 0.1)"
+                  />
                   <XAxis
-                    dataKey={timeRange === 'daily' ? 'hour' : timeRange === 'monthly' ? 'month' : 'year'}
+                    dataKey={
+                      timeRange === "daily"
+                        ? "hour"
+                        : timeRange === "monthly"
+                          ? "month"
+                          : "year"
+                    }
                     stroke="rgba(144, 202, 249, 0.5)"
                   />
                   <YAxis
                     yAxisId="left"
                     orientation="left"
                     stroke="#2196F3"
-                    label={{ value: 'Consumption (kWh)', angle: -90, position: 'insideLeft' }}
+                    label={{
+                      value: "Consumption (kWh)",
+                      angle: -90,
+                      position: "insideLeft",
+                    }}
                   />
                   <YAxis
                     yAxisId="right"
                     orientation="right"
                     stroke="#4CAF50"
-                    label={{ value: 'Cost (₹)', angle: 90, position: 'insideRight' }}
+                    label={{
+                      value: "Cost (₹)",
+                      angle: 90,
+                      position: "insideRight",
+                    }}
                   />
                   <RechartsTooltip content={<CustomTooltip />} />
                   <Legend />
@@ -743,11 +875,11 @@ const EnergyDetails = () => {
                     <ListItemText
                       primary="Peak Usage Time"
                       secondary={
-                        timeRange === 'daily' 
-                          ? '2:00 PM - 6:00 PM' 
-                          : timeRange === 'monthly' 
-                            ? '2:00 PM - 6:00 PM' 
-                            : 'June - August'
+                        timeRange === "daily"
+                          ? "2:00 PM - 6:00 PM"
+                          : timeRange === "monthly"
+                            ? "2:00 PM - 6:00 PM"
+                            : "June - August"
                       }
                     />
                   </ListItem>
@@ -758,11 +890,11 @@ const EnergyDetails = () => {
                     <ListItemText
                       primary="Most Efficient Period"
                       secondary={
-                        timeRange === 'daily'
-                          ? '11:00 PM - 5:00 AM'
-                          : timeRange === 'monthly'
-                            ? '11:00 PM - 5:00 AM'
-                            : 'January - March'
+                        timeRange === "daily"
+                          ? "11:00 PM - 5:00 AM"
+                          : timeRange === "monthly"
+                            ? "11:00 PM - 5:00 AM"
+                            : "January - March"
                       }
                     />
                   </ListItem>
@@ -773,9 +905,9 @@ const EnergyDetails = () => {
                     <ListItemText
                       primary="Average Consumption"
                       secondary={
-                        timeRange === 'daily'
-                          ? `${(statistics.averageConsumption).toFixed(1)} kWh per hour`
-                          : timeRange === 'monthly'
+                        timeRange === "daily"
+                          ? `${statistics.averageConsumption.toFixed(1)} kWh per hour`
+                          : timeRange === "monthly"
                             ? `${(statistics.averageConsumption / 30).toFixed(1)} kWh per day`
                             : `${(statistics.averageConsumption / 365).toFixed(1)} kWh per day`
                       }
@@ -833,14 +965,14 @@ const EnergyDetails = () => {
             <Grid item xs={12}>
               <Card>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <Typography variant="h4" sx={{ mr: 2 }}>
                       {statistics.efficiencyScore}%
                     </Typography>
                     <Chip
                       label="Good"
                       color="success"
-                      sx={{ fontWeight: 'bold' }}
+                      sx={{ fontWeight: "bold" }}
                     />
                   </Box>
                   <LinearProgress
@@ -849,15 +981,21 @@ const EnergyDetails = () => {
                     sx={{
                       height: 10,
                       borderRadius: 5,
-                      backgroundColor: 'rgba(144, 202, 249, 0.1)',
-                      '& .MuiLinearProgress-bar': {
+                      backgroundColor: "rgba(144, 202, 249, 0.1)",
+                      "& .MuiLinearProgress-bar": {
                         borderRadius: 5,
-                        background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                        background:
+                          "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
                       },
                     }}
                   />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    Your energy efficiency is better than 75% of similar households
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    Your energy efficiency is better than 75% of similar
+                    households
                   </Typography>
                 </CardContent>
               </Card>
@@ -874,7 +1012,7 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <TimelineIcon color="primary" sx={{ mr: 1 }} />
                     <Typography variant="h6">
                       Consumption Predictions
@@ -906,11 +1044,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <SavingsIcon color="success" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Potential Savings
-                    </Typography>
+                    <Typography variant="h6">Potential Savings</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -947,7 +1083,7 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <ParkIcon color="success" sx={{ mr: 1 }} />
                     <Typography variant="h6">
                       Carbon Footprint & Trees
@@ -979,11 +1115,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <AirIcon color="info" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Air & Water Impact
-                    </Typography>
+                    <Typography variant="h6">Air & Water Impact</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1011,37 +1145,52 @@ const EnergyDetails = () => {
             <Grid item xs={12}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <RecyclingIcon color="success" sx={{ mr: 1 }} />
                     <Typography variant="h6">
                       Waste Reduction Equivalent
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
                     <Typography variant="body1">
                       Your energy savings are equivalent to recycling:
                     </Typography>
                     <Chip
                       label={`${environmentalImpact.recyclingEquivalent} kg of waste`}
                       color="success"
-                      sx={{ fontWeight: 'bold' }}
+                      sx={{ fontWeight: "bold" }}
                     />
                   </Box>
                   <LinearProgress
                     variant="determinate"
-                    value={(environmentalImpact.recyclingEquivalent / 100) * 100}
+                    value={
+                      (environmentalImpact.recyclingEquivalent / 100) * 100
+                    }
                     sx={{
                       height: 10,
                       borderRadius: 5,
-                      backgroundColor: 'rgba(144, 202, 249, 0.1)',
-                      '& .MuiLinearProgress-bar': {
+                      backgroundColor: "rgba(144, 202, 249, 0.1)",
+                      "& .MuiLinearProgress-bar": {
                         borderRadius: 5,
-                        background: 'linear-gradient(45deg, #4CAF50 30%, #81C784 90%)',
+                        background:
+                          "linear-gradient(45deg, #4CAF50 30%, #81C784 90%)",
                       },
                     }}
                   />
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                    This is equivalent to recycling {Math.round(environmentalImpact.recyclingEquivalent / 2)} plastic bottles
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 1 }}
+                  >
+                    This is equivalent to recycling{" "}
+                    {Math.round(environmentalImpact.recyclingEquivalent / 2)}{" "}
+                    plastic bottles
                   </Typography>
                 </CardContent>
               </PredictionCard>
@@ -1058,11 +1207,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={4}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <LightbulbIcon color="warning" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Quick Wins
-                    </Typography>
+                    <Typography variant="h6">Quick Wins</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1084,11 +1231,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={4}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <AcUnitIcon color="info" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Temperature Control
-                    </Typography>
+                    <Typography variant="h6">Temperature Control</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1110,11 +1255,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={4}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <KitchenIcon color="success" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Kitchen Efficiency
-                    </Typography>
+                    <Typography variant="h6">Kitchen Efficiency</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1145,11 +1288,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <SpeedIcon color="primary" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Consumption Analysis
-                    </Typography>
+                    <Typography variant="h6">Consumption Analysis</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1186,11 +1327,9 @@ const EnergyDetails = () => {
             <Grid item xs={12} md={6}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <AttachMoneyIcon color="success" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Cost Analysis
-                    </Typography>
+                    <Typography variant="h6">Cost Analysis</Typography>
                   </Box>
                   <List>
                     <ListItem>
@@ -1204,11 +1343,17 @@ const EnergyDetails = () => {
                     </ListItem>
                     <ListItem>
                       <ListItemIcon>
-                        <CompareArrowsIcon color={statistics.comparisonWithAverage >= 0 ? "success" : "error"} />
+                        <CompareArrowsIcon
+                          color={
+                            statistics.comparisonWithAverage >= 0
+                              ? "success"
+                              : "error"
+                          }
+                        />
                       </ListItemIcon>
                       <ListItemText
                         primary="Comparison with Average"
-                        secondary={`${statistics.comparisonWithAverage >= 0 ? '+' : ''}${statistics.comparisonWithAverage}%`}
+                        secondary={`${statistics.comparisonWithAverage >= 0 ? "+" : ""}${statistics.comparisonWithAverage}%`}
                       />
                     </ListItem>
                     <ListItem>
@@ -1227,11 +1372,9 @@ const EnergyDetails = () => {
             <Grid item xs={12}>
               <PredictionCard>
                 <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     <EmojiEventsIcon color="warning" sx={{ mr: 1 }} />
-                    <Typography variant="h6">
-                      Performance Metrics
-                    </Typography>
+                    <Typography variant="h6">Performance Metrics</Typography>
                   </Box>
                   <Grid container spacing={2}>
                     <Grid item xs={12} md={6}>
@@ -1245,14 +1388,19 @@ const EnergyDetails = () => {
                           sx={{
                             height: 10,
                             borderRadius: 5,
-                            backgroundColor: 'rgba(144, 202, 249, 0.1)',
-                            '& .MuiLinearProgress-bar': {
+                            backgroundColor: "rgba(144, 202, 249, 0.1)",
+                            "& .MuiLinearProgress-bar": {
                               borderRadius: 5,
-                              background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+                              background:
+                                "linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)",
                             },
                           }}
                         />
-                        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{ mt: 1 }}
+                        >
                           {statistics.efficiencyScore}% efficiency rating
                         </Typography>
                       </Box>
@@ -1284,4 +1432,4 @@ const EnergyDetails = () => {
   );
 };
 
-export default EnergyDetails; 
+export default EnergyDetails;
