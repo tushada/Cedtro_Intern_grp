@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
@@ -1256,256 +1256,2350 @@ const getRoomStats = (roomsData) => {
 };
 
 // Add this at the top of the file:
-const backendUrl = "https://713e555cdc8d.ngrok-free.app"; // Your backend HTTP URL
-const wsUrl = "wss://713e555cdc8d.ngrok-free.app";        // Your backend WebSocket URL
+const backendUrl = "https://0fbf086072b3.ngrok-free.app"; // <--- CHANGE THIS WHEN NGROK URL CHANGES
+const wsUrl = "wss://0fbf086072b3.ngrok-free.app";
 
-function Dashboard() {
-  const [currentSection, setCurrentSection] = useState("home");
-  const [relays, setRelays] = useState([]);
-  const [states, setStates] = useState({});
-  const [userInitiatedMap, setUserInitiatedMap] = useState({});
-  const [greeting, setGreeting] = useState("");
-  const [dateTime, setDateTime] = useState("");
-  const wsRef = useRef(null);
+function RelayDashboard() {
+  const [relays, setRelays] = React.useState([]);
+  const [states, setStates] = React.useState({});
+  const [loading, setLoading] = React.useState(true);
 
-  // Get user info from localStorage
-  const deviceId = localStorage.getItem("deviceId") || "";
-  const updateHomeId = localStorage.getItem("updateHomeId") || "";
-  const originalHomeId = localStorage.getItem("originalHomeId") || "";
-  const username = localStorage.getItem("username") || "User";
+  const deviceId = localStorage.getItem("deviceId");
+  const originalHomeId = localStorage.getItem("originalHomeId");
+  const updateHomeId = localStorage.getItem("updateHomeId");
 
-  // Date/time updater
-  useEffect(() => {
-    function updateDateTime() {
-      setGreeting(`Hello, ${username}!`);
-      setDateTime(new Date().toLocaleString());
+  React.useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const relaysRes = await fetch(
+          `${backendUrl}/relays/${deviceId}?originalHomeId=${originalHomeId}`
+        );
+        const relaysData = await relaysRes.json();
+        setRelays(relaysData);
+
+        const statesRes = await fetch(
+          `${backendUrl}/states/${deviceId}?updateHomeId=${updateHomeId}`
+        );
+        const statesData = await statesRes.json();
+        setStates(statesData);
+      } catch (e) {
+        alert("Failed to fetch relays or states");
+      }
+      setLoading(false);
     }
-    updateDateTime();
-    const interval = setInterval(updateDateTime, 60000);
-    return () => clearInterval(interval);
-  }, [username]);
+    fetchData();
+  }, [deviceId, originalHomeId, updateHomeId]);
 
-  // Fetch relays and states
-  const fetchRelayData = async () => {
-    try {
-      const relaysRes = await fetch(`${backendUrl}/relays/${deviceId}?originalHomeId=${originalHomeId}`);
-      const relaysData = await relaysRes.json();
-      const statesRes = await fetch(`${backendUrl}/states/${deviceId}?updateHomeId=${updateHomeId}`);
-      const statesData = await statesRes.json();
-      setRelays(relaysData);
-      setStates(statesData);
-    } catch (e) {
-      alert("Error fetching relay data");
-    }
+  const handleToggle = async (room, relay, currentState) => {
+    const command = currentState === "ON" ? "OFF" : "ON";
+    await fetch(`${backendUrl}/control`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        deviceId,
+        updateHomeId,
+        room,
+        relay,
+        command,
+      }),
+    });
+    setStates((prev) => ({
+      ...prev,
+      [`${room}_${relay}`]: command,
+    }));
   };
 
-  // On mount: fetch relays and connect WebSocket
-  useEffect(() => {
-    fetchRelayData();
-    connectWebSocket();
-    // eslint-disable-next-line
-  }, []);
-
-  // WebSocket connection
-  function connectWebSocket() {
-    if (wsRef.current) wsRef.current.close();
+  React.useEffect(() => {
     const ws = new window.WebSocket(wsUrl);
-    ws.onopen = () => console.log("WebSocket connected");
     ws.onmessage = (event) => {
-      try {
-        const json = JSON.parse(event.data);
-        if (
-          json.deviceId === deviceId &&
-          json.homeId === updateHomeId
-        ) {
-          const key = `${json.room}_${json.relay}`;
-          setStates((prev) => ({ ...prev, [key]: json.value }));
-        }
-      } catch (e) {
-        console.error("WebSocket message parse error", e);
+      const data = JSON.parse(event.data);
+      if (
+        data.deviceId === deviceId &&
+        data.homeId === updateHomeId &&
+        data.room &&
+        data.relay
+      ) {
+        setStates((prev) => ({
+          ...prev,
+          [`${data.room}_${data.relay}`]: data.value,
+        }));
       }
     };
-    ws.onclose = () => console.log("WebSocket closed");
-    ws.onerror = (err) => console.error("WebSocket error", err);
-    wsRef.current = ws;
-  }
+    return () => ws.close();
+  }, [deviceId, updateHomeId]);
 
-  // Send relay command
-  const sendCommand = async (room, relay, command) => {
-    try {
-      await fetch(`${backendUrl}/control`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          deviceId,
-          updateHomeId,
-          room,
-          relay,
-          command,
-        }),
+  if (loading) return <div>Loading relays...</div>;
+
+  return (
+    <div style={{ margin: '24px 0', padding: '16px', border: '1px solid #ccc', borderRadius: 8 }}>
+      <h2>Relay Control</h2>
+      {relays.length === 0 && <div>No relays found.</div>}
+      {relays.map(({ room, relay }) => {
+        const key = `${room}_${relay}`;
+        const state = states[key] || "OFF";
+        return (
+          <div key={key} style={{ marginBottom: 8 }}>
+            <span>
+              {room} - {relay}
+            </span>
+            <button
+              style={{ marginLeft: 12 }}
+              onClick={() => handleToggle(room, relay, state)}
+            >
+              {state === "ON" ? "Turn OFF" : "Turn ON"}
+            </button>
+            <span style={{ marginLeft: 12, color: state === "ON" ? "green" : "gray" }}>
+              {state}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+const Dashboard = ({
+  isGuest,
+  discoveredDevices = [],
+  roomsData = {},
+  setRoomsData = () => {},
+  username,
+}) => {
+  const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = React.useState(new Date());
+
+  // Get time-based greeting
+  const getTimeGreeting = () => {
+    const hour = currentTime.getHours();
+    if (hour >= 5 && hour < 12) return "Good Morning";
+    if (hour >= 12 && hour < 18) return "Good Afternoon";
+    if (hour >= 18 && hour < 22) return "Good Evening";
+    return "Good Night";
+  };
+
+  // Get avatar initials
+  const getAvatarInitials = (name) => {
+    const parts = name.split(" ");
+    const first = parts[0] ? parts[0][0] : "";
+    const last = parts[1] ? parts[1][0] : "";
+    return (first + last).toUpperCase();
+  };
+
+  const [energyView, setEnergyView] = React.useState("hourly");
+
+  // Memoize energy data to prevent unnecessary recalculations
+  const hourlyData = React.useMemo(() => getEnergyDataHourly(), []);
+  const dailyData = React.useMemo(() => getEnergyDataDaily(), []);
+  const weeklyData = React.useMemo(() => getEnergyDataWeekly(), []);
+  const monthlyData = React.useMemo(() => getEnergyDataMonthly(), []);
+
+  // Set initial energy data based on view
+  const [energyData, setEnergyData] = React.useState(hourlyData);
+  const dailyTotal = React.useMemo(() => calculateDailyTotal(), []);
+
+  // Update energy data when view changes
+  React.useEffect(() => {
+    const updateData = () => {
+      switch (energyView) {
+        case "hourly":
+          setEnergyData(getEnergyDataHourly());
+          break;
+        case "daily":
+          setEnergyData(dailyData);
+          break;
+        case "weekly":
+          setEnergyData(weeklyData);
+          break;
+        case "monthly":
+          setEnergyData(monthlyData);
+          break;
+        default:
+          setEnergyData(getEnergyDataHourly());
+      }
+    };
+
+    updateData();
+
+    // Update hourly data every hour
+    const interval = setInterval(updateData, 60 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [energyView, dailyData, weeklyData, monthlyData]);
+
+  // Update current time every second
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // MQTT state for weather
+  const [liveWeather, setLiveWeather] = React.useState({
+    temperature: null,
+    humidity: null,
+  });
+
+  React.useEffect(() => {
+    const ws = new window.WebSocket('ws://localhost:5000/');
+
+    ws.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      if (data.type === "temperature") {
+        setLiveWeather((prev) => ({ ...prev, temperature: data.value }));
+      } else if (data.type === "humidity") {
+        setLiveWeather((prev) => ({ ...prev, humidity: data.value }));
+      }
+    };
+
+    return () => ws.close();
+  }, []);
+
+  const [themeMode, setThemeMode] = React.useState("dark");
+
+  const toggleTheme = () => {
+    setThemeMode((prev) => (prev === "dark" ? "light" : "dark"));
+  };
+
+  // Update time every second
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Update energy data based on view
+  React.useEffect(() => {
+    // Update energy data based on current view
+    const updateData = () => {
+      switch (energyView) {
+        case "hourly":
+          setEnergyData(getEnergyDataHourly());
+          break;
+        case "daily":
+          setEnergyData(getEnergyDataDaily());
+          break;
+        case "weekly":
+          setEnergyData(getEnergyDataWeekly());
+          break;
+        case "monthly":
+          setEnergyData(getEnergyDataMonthly());
+          break;
+        default:
+          setEnergyData(getEnergyDataMonthly());
+      }
+    };
+
+    updateData();
+
+    // Set appropriate update interval based on view
+    let interval;
+    switch (energyView) {
+      case "hourly":
+        interval = 60 * 1000; // Update every minute
+        break;
+      case "daily":
+        interval = 60 * 60 * 1000; // Update every hour
+        break;
+      case "weekly":
+        interval = 24 * 60 * 60 * 1000; // Update every day
+        break;
+      case "monthly":
+        interval = 7 * 24 * 60 * 60 * 1000; // Update every week
+        break;
+    }
+
+    const timer = setInterval(updateData, interval);
+    return () => clearInterval(timer);
+  }, [energyView]);
+
+  const [unassignedDevices, setUnassignedDevices] =
+    React.useState(discoveredDevices);
+  const [assignRoom, setAssignRoom] = React.useState({});
+
+  React.useEffect(() => {
+    setUnassignedDevices(discoveredDevices);
+  }, [discoveredDevices]);
+
+  React.useEffect(() => {
+    // Update energy data based on current view
+    const updateData = () => {
+      switch (energyView) {
+        case "hourly":
+          setEnergyData(getEnergyDataHourly());
+          break;
+        case "daily":
+          setEnergyData(getEnergyDataDaily());
+          break;
+        case "weekly":
+          setEnergyData(getEnergyDataWeekly());
+          break;
+        case "monthly":
+          setEnergyData(getEnergyDataMonthly());
+          break;
+        default:
+          setEnergyData(getEnergyDataMonthly());
+      }
+    };
+
+    updateData();
+
+    // Set appropriate update interval based on view
+    let interval;
+    switch (energyView) {
+      case "hourly":
+        interval = 60 * 1000; // Update every minute
+        break;
+      case "daily":
+        interval = 60 * 60 * 1000; // Update every hour
+        break;
+      case "weekly":
+        interval = 24 * 60 * 60 * 1000; // Update every day
+        break;
+      case "monthly":
+        interval = 7 * 24 * 60 * 60 * 1000; // Update every week
+        break;
+    }
+
+    const timer = setInterval(updateData, interval);
+    return () => clearInterval(timer);
+  }, [energyView]);
+  const [selectedRoom, setSelectedRoom] = React.useState(null);
+  // Initialize roomStates based on roomsData
+  const [roomStates, setRoomStates] = React.useState(() => {
+    const initialStates = {};
+    Object.keys(roomsData).forEach((room) => {
+      initialStates[room] = false;
+    });
+    return initialStates;
+  });
+
+  // Update roomStates when roomsData changes
+  React.useEffect(() => {
+    setRoomStates((prevStates) => {
+      const newStates = { ...prevStates };
+      // Add new rooms
+      Object.keys(roomsData).forEach((room) => {
+        if (newStates[room] === undefined) {
+          newStates[room] = false;
+        }
       });
-    } catch (e) {
+      // Remove deleted rooms
+      Object.keys(newStates).forEach((room) => {
+        if (!roomsData[room]) {
+          delete newStates[room];
+        }
+      });
+      return newStates;
+    });
+  }, [roomsData]);
+  const [editingRoom, setEditingRoom] = React.useState(null);
+  const [editRoomValue, setEditRoomValue] = React.useState("");
+  // For adding rooms
+  const [addRoomDialogOpen, setAddRoomDialogOpen] = React.useState(false);
+  const [newRoomName, setNewRoomName] = React.useState("");
+  // For adding devices
+  const [addDeviceDialogOpen, setAddDeviceDialogOpen] = React.useState(false);
+  const [addDeviceRoom, setAddDeviceRoom] = React.useState("");
+  const [newDeviceName, setNewDeviceName] = React.useState("");
+
+  const handleRoomClick = (room) => {
+    setSelectedRoom(selectedRoom === room ? null : room);
+  };
+
+  const handleRoomToggle = (room, event) => {
+    event.stopPropagation();
+    setRoomStates((prev) => ({
+      ...prev,
+      [room]: !prev[room],
+    }));
+  };
+
+  const [notifications, setNotifications] = useState([
+    {
+      id: 1,
+      title: "Rule Triggered",
+      message: "Living Room AC turned ON due to temperature threshold",
+      timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
+      unread: true,
+      type: "info",
+    },
+    {
+      id: 2,
+      title: "Energy Alert",
+      message: "High energy consumption detected in Kitchen",
+      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
+      unread: true,
+      type: "warning",
+    },
+    {
+      id: 3,
+      title: "Device Status",
+      message: "Bedroom Light turned OFF automatically",
+      timestamp: new Date(Date.now() - 1000 * 60 * 60), // 1 hour ago
+      unread: false,
+      type: "success",
+    },
+  ]);
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [toast, setToast] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
+
+  const handleNotificationClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleNotificationClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleNotificationRead = (id) => {
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === id
+          ? { ...notification, unread: false }
+          : notification,
+      ),
+    );
+  };
+
+  const showToast = (message, severity = "info") => {
+    setToast({ open: true, message, severity });
+  };
+
+  const handleToastClose = () => {
+    setToast({ ...toast, open: false });
+  };
+
+  // Add this function to generate notifications for device state changes
+  const generateDeviceNotification = (room, device, status) => {
+    const newNotification = {
+      id: Date.now(),
+      title: "Device Status Change",
+      message: `${room} ${device} turned ${status ? "ON" : "OFF"}`,
+      timestamp: new Date(),
+      unread: true,
+      type: status ? "success" : "info",
+    };
+
+    setNotifications((prev) => [newNotification, ...prev]);
+    showToast(newNotification.message, newNotification.type);
+  };
+
+  // Modify the handleDeviceToggle function to include notifications and API call
+  const handleDeviceToggle = async (room, relay) => {
+    const key = `${room}_${relay}`;
+    const currentState = states[key];
+    const command = currentState === "ON" ? "OFF" : "ON";
+    await sendControlCommand({ room, relay, command });
+    setStates((prev) => ({ ...prev, [key]: command }));
+    // If you had notification logic, add it here
+    // generateDeviceNotification(room, relay, command === "ON");
+  };
+
+  const WelcomeBanner = styled(Box)(({ theme }) => ({
+    position: "relative",
+    backgroundColor:
+      theme.palette.mode === "dark" ? "#262626" : theme.palette.primary.main,
+    color: theme.palette.primary.contrastText,
+    padding: "40px",
+    borderRadius: "20px",
+    marginBottom: "32px",
+    display: "flex",
+    alignItems: "center",
+    gap: "32px",
+    boxShadow: theme.shadows[3],
+    transition: "all 0.3s ease",
+    "&:hover": {
+      transform: "translateY(-4px)",
+      boxShadow: theme.shadows[6],
+    },
+    "&::before": {
+      content: "''",
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      borderRadius: "inherit",
+      background:
+        "linear-gradient(135deg, rgba(45,45,45,0.1), rgba(45,45,45,0.05), rgba(45,45,45,0.1))",
+      animation: "wave 10s ease-in-out infinite",
+      transform: "rotate(45deg)",
+      opacity: 0.5,
+    },
+    "@keyframes wave": {
+      "0%": {
+        backgroundPosition: "0% 50%",
+        opacity: 0.5,
+      },
+      "50%": {
+        backgroundPosition: "100% 50%",
+        opacity: 0.3,
+      },
+      "100%": {
+        backgroundPosition: "0% 50%",
+        opacity: 0.5,
+      },
+    },
+  }));
+
+  // Add these styled components after the existing styled components
+  const GlowingDot = styled("circle")(({ theme }) => ({
+    filter: "drop-shadow(0 0 8px rgba(144, 202, 249, 0.6))",
+    transition: "all 0.3s ease",
+    "&:hover": {
+      filter: "drop-shadow(0 0 12px rgba(144, 202, 249, 0.8))",
+      transform: "scale(1.2)",
+    },
+  }));
+
+  const AnimatedTooltip = styled("div")(({ theme }) => ({
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    backdropFilter: "blur(8px)",
+    padding: "12px 16px",
+    borderRadius: "8px",
+    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+    border: "1px solid rgba(144, 202, 249, 0.3)",
+    animation: "pulse 2s infinite",
+    "@keyframes pulse": {
+      "0%": {
+        boxShadow: "0 0 0 0 rgba(144, 202, 249, 0.4)",
+      },
+      "70%": {
+        boxShadow: "0 0 0 10px rgba(144, 202, 249, 0)",
+      },
+      "100%": {
+        boxShadow: "0 0 0 0 rgba(144, 202, 249, 0)",
+      },
+    },
+    "& p": {
+      margin: "0 0 8px 0",
+      "&:last-child": {
+        margin: 0,
+      },
+    },
+    "& .label": {
+      fontWeight: "bold",
+      color: theme.palette.text.primary,
+    },
+    "& .value": {
+      color: theme.palette.primary.main,
+      fontSize: "1.1em",
+    },
+    "& .timestamp": {
+      color: theme.palette.text.secondary,
+      fontSize: "0.85em",
+      marginTop: "4px",
+    },
+  }));
+
+  const [expandedSummary, setExpandedSummary] = useState(null);
+
+  const deviceStats = getDeviceStats(roomsData);
+  const roomStats = getRoomStats(roomsData);
+
+  // 1. Add state for quick access devices and dialog visibility at the top of the Dashboard component:
+  const [quickAccessDevices, setQuickAccessDevices] = React.useState([]);
+  const [editQuickAccessOpen, setEditQuickAccessOpen] = React.useState(false);
+
+  // 2. On initial mount, set default quick access devices (first 3 found):
+  React.useEffect(() => {
+    if (quickAccessDevices.length === 0) {
+      const allDevices = Object.entries(roomsData).flatMap(
+        ([roomName, roomData]) =>
+          (roomData?.devices || [])
+            .filter((device) => device.name !== "Only Smart TV")
+            .map((device) => ({ room: roomName, name: device.name })),
+      );
+      setQuickAccessDevices(allDevices.slice(0, 3));
+    }
+  }, [roomsData]);
+
+  // 1. Add a custom handler for Smart TV in Living Room:
+  const handleSmartTVToggle = async (currentStatus) => {
+    const newStatus = !currentStatus;
+    // Send ON/OFF via WebSocket
+    if (wsRef.current && wsRef.current.readyState === 1) {
+      wsRef.current.send(newStatus ? "ON" : "OFF");
+      setWsStatus("Sent: " + (newStatus ? "ON" : "OFF"));
+    }
+    // Optimistically update UI
+    setRoomsData((prevRoomsData) => {
+      const newRoomsData = { ...prevRoomsData };
+      const deviceIdx = newRoomsData["Living Room"].devices.findIndex(
+        (d) => d.name === "Smart TV",
+      );
+      if (deviceIdx !== -1) {
+        newRoomsData["Living Room"].devices[deviceIdx] = {
+          ...newRoomsData["Living Room"].devices[deviceIdx],
+          status: newStatus,
+        };
+      }
+      return newRoomsData;
+    });
+  };
+
+  // 1. Add state for the dropdown anchor and open/close logic at the top of the Dashboard component:
+  const [occupiedAnchorEl, setOccupiedAnchorEl] = React.useState(null);
+  const handleOccupiedClick = (event) =>
+    setOccupiedAnchorEl(event.currentTarget);
+  const handleOccupiedClose = () => setOccupiedAnchorEl(null);
+  const occupiedOpen = Boolean(occupiedAnchorEl);
+
+  // 2. In the Occupied Rooms / Total section, add a Button or IconButton to trigger the dropdown:
+  <Box sx={{ position: "relative", display: "inline-block" }}>
+    <Typography variant="subtitle2" color="text.secondary">
+      Occupied Rooms / Total
+    </Typography>
+    <Button
+      size="small"
+      onClick={handleOccupiedClick}
+      sx={{
+        color: "secondary.main",
+        fontWeight: 800,
+        fontSize: "2rem", // Increased font size
+        textTransform: "none",
+        p: 0,
+        minWidth: 0,
+        ml: 1,
+        verticalAlign: "middle",
+        lineHeight: 1.1,
+        display: "inline-flex",
+        alignItems: "center",
+      }}
+      endIcon={<ExpandMoreIcon sx={{ fontSize: "2rem" }} />} // Make icon bigger
+    >
+      {roomStats.occupied} / {roomStats.total}
+    </Button>
+    <Menu
+      anchorEl={occupiedAnchorEl}
+      open={occupiedOpen}
+      onClose={handleOccupiedClose}
+      PaperProps={{ sx: { minWidth: 200 } }}
+      anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+      transformOrigin={{ vertical: "top", horizontal: "left" }}
+    >
+      {Object.entries(roomsData).map(([roomName, roomData]) => {
+        const isOccupied =
+          roomData.devices && roomData.devices.some((d) => d.status);
+        return (
+          <MenuItem key={roomName} dense>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Box
+                sx={{
+                  width: 10,
+                  height: 10,
+                  borderRadius: "50%",
+                  bgcolor: isOccupied ? "success.main" : "grey.500",
+                  mr: 1,
+                }}
+              />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: isOccupied ? "success.main" : "text.secondary",
+                  fontWeight: isOccupied ? 600 : 400,
+                }}
+              >
+                {roomName}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{ color: "text.secondary", ml: 1 }}
+              >
+                {isOccupied ? "Occupied" : "Not Occupied"}
+              </Typography>
+            </Box>
+          </MenuItem>
+        );
+      })}
+    </Menu>
+  </Box>;
+
+  // Add at the top of the Dashboard component (after other useState):
+  const [chartTimeRange, setChartTimeRange] = React.useState("24hrs");
+
+  // Update the energyData to filter based on chartTimeRange
+  const filteredEnergyData = React.useMemo(() => {
+    if (energyView !== "hourly") return energyData;
+    if (chartTimeRange === "12hrs") {
+      return energyData.slice(-12);
+    } else if (chartTimeRange === "24hrs") {
+      return energyData;
+    } else if (chartTimeRange === "7days") {
+      // For 7 days, use dailyData if available
+      return dailyData;
+    }
+    return energyData;
+  }, [energyData, chartTimeRange, energyView, dailyData]);
+
+  // Add at the top of the Dashboard component (after other useState):
+  const [wsStatus, setWsStatus] = React.useState("Connecting...");
+  const wsRef = React.useRef(null);
+
+  React.useEffect(() => {
+    // Only connect once on mount
+
+    const ws = new window.WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => setWsStatus("✅ Connected to Node-RED");
+    ws.onerror = () => setWsStatus("❌ WebSocket Error");
+    ws.onclose = () => setWsStatus("🔌 WebSocket Disconnected");
+    ws.onmessage = (msg) => {
+      const payload = msg.data;
+      setRoomsData((prevRoomsData) => {
+        const newRoomsData = { ...prevRoomsData };
+        const deviceIdx = newRoomsData["Living Room"].devices.findIndex(
+          (d) => d.name === "Smart TV",
+        );
+        if (deviceIdx !== -1) {
+          newRoomsData["Living Room"].devices[deviceIdx] = {
+            ...newRoomsData["Living Room"].devices[deviceIdx],
+            status: payload === "ON",
+          };
+        }
+        return newRoomsData;
+      });
+      setWsStatus("State: " + payload);
+    };
+    return () => ws.close();
+  }, [setRoomsData]);
+
+  const getRoomIcon = (roomName) => {
+    const name = roomName.toLowerCase();
+    if (name.includes("living")) return <LivingIcon />;
+    if (name.includes("bedroom")) return <BedIcon />;
+    if (name.includes("kitchen")) return <KitchenIcon />;
+    if (name.includes("bathroom")) return <BathtubIcon />;
+    return <PowerSettingsNewIcon />;
+  };
+
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const [states, setStates] = React.useState({});
+
+  // Fetch relays and states on mount
+  React.useEffect(() => {
+    getRelays().catch(console.error);
+    getStates().then(setStates).catch(console.error);
+    // Listen for real-time updates
+    const ws = connectWebSocket((msg) => {
+      if (msg.type === "state") {
+        setStates((prev) => ({ ...prev, [`${msg.room}_${msg.relay}`]: msg.value }));
+      }
+    });
+    return () => ws.close();
+  }, []);
+  const [rooms, setRooms] = React.useState([]);
+  const homeId = localStorage.getItem("updateHomeId");
+
+  React.useEffect(() => {
+    if (!homeId) return;
+    const homeRef = doc(db, "homes", homeId);
+    const roomsRef = collection(homeRef, "rooms");
+    // Real-time updates for rooms and relays
+    const unsubscribe = onSnapshot(roomsRef, (snapshot) => {
+      const roomList = [];
+      snapshot.forEach((doc) => {
+        roomList.push({ id: doc.id, ...doc.data() });
+      });
+      setRooms(roomList);
+    });
+    return () => unsubscribe();
+  }, [homeId]);
+
+  const handleRelayToggle = async (room, relay) => {
+    const key = `${room}_${relay}`;
+    const currentState = states[key] || "OFF";
+    const command = currentState === "ON" ? "OFF" : "ON";
+    try {
+      await sendControlCommand({ room, relay, command });
+      setStates((prev) => ({ ...prev, [key]: command }));
+    } catch (err) {
       alert("Failed to send command");
     }
   };
 
-  // Logout
-  const logout = () => {
-    localStorage.clear();
-    window.location.href = "/";
-  };
-
-  // UI for relays grouped by room
-  const roomRelayMap = {};
-  relays.forEach((obj) => {
-    const room = obj.room;
-    const relay = obj.relay;
-    const key = `${room}_${relay}`;
-    const isOn = (states[key] || "OFF").toUpperCase() === "ON";
-    if (!roomRelayMap[room]) roomRelayMap[room] = [];
-    roomRelayMap[room].push({ relay, isOn });
-  });
+  // Add this at the top of the file:
+  const deviceId = localStorage.getItem("deviceId");
+  const originalHomeId = localStorage.getItem("originalHomeId");
+  const updateHomeId = localStorage.getItem("updateHomeId");
+  if (!deviceId || !originalHomeId || !updateHomeId) {
+    return <div>Missing login info. Please log in again.</div>;
+  }
 
   return (
-    <div>
-      <div>
-        <span>{greeting}</span>
-        <span style={{ float: "right" }}>{dateTime}</span>
-      </div>
-      <button onClick={logout}>Logout</button>
-      <div>
-        <button onClick={() => setCurrentSection("home")}>Home</button>
-        <button onClick={() => setCurrentSection("switches")}>Switches</button>
-        <button onClick={() => setCurrentSection("visualization")}>Visualization</button>
-        <button onClick={() => setCurrentSection("settings")}>Settings</button>
-      </div>
-      {currentSection === "home" && (
-        <div>
-          <h2>Home Items</h2>
-          <button onClick={fetchRelayData}>Refresh Home Items</button>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, marginTop: 16 }}>
-            {Object.keys(roomRelayMap).length === 0 && <div>No rooms found.</div>}
-            {Object.entries(roomRelayMap).map(([room, relays]) => (
-              <div
-                key={room}
-                style={{
-                  border: "1px solid #ccc",
-                  borderRadius: 8,
-                  padding: 16,
-                  minWidth: 220,
-                  background: "#fafafa",
-                }}
+    <>
+      <RelayDashboard />
+    <Box
+      sx={{
+        pt: { xs: 1, sm: 2, md: 3 },
+        pr: { xs: 1, sm: 2, md: 3 },
+        pb: { xs: 1, sm: 2, md: 3 },
+        pl: 0,
+      }}
+    >
+      <DashboardBanner
+        sx={(theme) => ({
+          background:
+            theme.palette.mode === "dark"
+              ? "linear-gradient(90deg, #232526 0%, #414345 100%)"
+              : "linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%)",
+          color:
+            theme.palette.mode === "dark"
+              ? theme.palette.primary.contrastText
+              : theme.palette.text.primary,
+          borderRadius: 4,
+          p: { xs: 2, sm: 3, md: 4 },
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: { xs: 2, md: 4 },
+          position: "relative",
+          overflow: "hidden",
+        })}
+      >
+        <Box sx={{ mb: { xs: 2, md: 0 } }}>
+          <Typography
+            variant="h2"
+            sx={(theme) => ({
+              fontWeight: 800,
+              color:
+                theme.palette.mode === "dark"
+                  ? theme.palette.primary.main
+                  : theme.palette.primary.dark,
+              mb: 1,
+              fontSize: { xs: "2rem", sm: "2.5rem", md: "3rem" },
+            })}
+          >
+            {getTimeGreeting()}
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            sx={(theme) => ({
+              color:
+                theme.palette.mode === "dark"
+                  ? "rgba(255,255,255,0.7)"
+                  : theme.palette.text.secondary,
+              fontWeight: 400,
+              mb: 2,
+              fontSize: { xs: "1rem", sm: "1.2rem", md: "1.5rem" },
+            })}
+          >
+            Welcome to your Smart Home Dashboard
+          </Typography>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: { xs: 2, md: 4 },
+            flexDirection: { xs: "column", sm: "row" },
+          }}
+        >
+          <Box
+            sx={(theme) => ({
+              bgcolor:
+                theme.palette.mode === "dark"
+                  ? "rgba(30,30,30,0.85)"
+                  : "rgba(255,255,255,0.85)",
+              borderRadius: 3,
+              p: { xs: 2, sm: 3 },
+              minWidth: 120,
+              textAlign: "center",
+              border: `1.5px solid ${theme.palette.primary.main}`,
+              fontFamily: "'Orbitron', monospace",
+            })}
+          >
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: "inherit",
+                mb: 0.5,
+                fontSize: { xs: "1.5rem", sm: "2rem" },
+              }}
+            >
+              {currentTime.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </Typography>
+            <Typography
+              variant="subtitle2"
+              sx={(theme) => ({
+                color: theme.palette.primary.main,
+                fontWeight: 500,
+                fontSize: { xs: "0.9rem", sm: "1rem" },
+              })}
+            >
+              {currentTime.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={(theme) => ({
+                color: theme.palette.text.secondary,
+                fontSize: { xs: "0.8rem", sm: "0.9rem" },
+              })}
+            >
+              {currentTime.toLocaleDateString("en-US", { weekday: "long" })}
+            </Typography>
+          </Box>
+          <Box>
+            <Typography
+              variant="subtitle1"
+              sx={(theme) => ({
+                color: theme.palette.primary.light,
+                fontWeight: 700,
+                mb: 1,
+                fontSize: { xs: "1rem", sm: "1.2rem" },
+              })}
+            >
+              House Members
+            </Typography>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              {houseMembers.map((member) => (
+                <Chip
+                  key={member}
+                  label={member}
+                  avatar={<Avatar>{member[0]}</Avatar>}
+                  sx={(theme) => ({
+                    bgcolor:
+                      theme.palette.mode === "dark"
+                        ? "rgba(33,150,243,0.1)"
+                        : "rgba(33,150,243,0.15)",
+                    color: theme.palette.primary.main,
+                    fontWeight: 600,
+                    fontSize: { xs: "0.9rem", sm: "1rem" },
+                    px: 2,
+                    borderRadius: 2,
+                    transition: "all 0.2s",
+                    "&:hover": {
+                      bgcolor: theme.palette.primary.main,
+                      color: "#fff",
+                    },
+                  })}
+                />
+              ))}
+              {/* Removed the IconButton with AddIcon for adding members */}
+            </Box>
+          </Box>
+        </Box>
+      </DashboardBanner>
+
+      {/* Two-column Layout */}
+      <Grid container spacing={4} sx={{ mb: 3 }}>
+        {/* Weather Card */}
+        <Grid item xs={12} md={6}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark" ? "#23272a" : "#f5f7fa",
+              minHeight: 280,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+              Current Weather{" "}
+              <span style={{ color: "#90caf9" }}>
+                ({liveWeather.condition})
+              </span>
+            </Typography>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              {/* Weather metrics here */}
+              <WeatherCard>
+                <WbSunnyIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                <Typography variant="h6">
+                  {liveWeather.temperature !== null
+                    ? `${liveWeather.temperature}°C`
+                    : "—"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Temperature
+                </Typography>
+              </WeatherCard>
+              <WeatherCard>
+                <WaterDropIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                <Typography variant="h6">
+                  {liveWeather.humidity !== null
+                    ? `${liveWeather.humidity}%`
+                    : "—"}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Humidity
+                </Typography>
+              </WeatherCard>
+              <WeatherCard>
+                <WindIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                <Typography variant="h6">—</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Wind Speed
+                </Typography>
+              </WeatherCard>
+              <WeatherCard>
+                <UmbrellaIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                <Typography variant="h6">—</Typography>
+                <Typography variant="caption" color="text.secondary">
+                  Precipitation
+                </Typography>
+              </WeatherCard>
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Quick Access Devices Card */}
+        <Grid item xs={12} md={6}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: (theme) =>
+                theme.palette.mode === "dark" ? "#23272a" : "#f5f7fa",
+              minHeight: 280,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+            }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                Quick Access Devices
+              </Typography>
+              <Button
+                size="small"
+                variant="outlined"
+                onClick={() => setEditQuickAccessOpen(true)}
               >
-                <h3 style={{ marginBottom: 12 }}>{room}</h3>
-                <div>
-                  {relays.map(({ relay, isOn }) => {
-                    const key = `${room}_${relay}`;
-                    return (
-                      <div
-                        key={relay}
-                        style={{
+                Edit
+              </Button>
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr 1fr" },
+                gap: 2,
+              }}
+            >
+              {quickAccessDevices
+                .filter((ref) => ref.name !== "Only Smart TV")
+                .map((ref, idx) => {
+                  const device = roomsData[ref.room]?.devices?.find(
+                    (d) => d.name === ref.name,
+                  );
+                  if (!device) return null;
+                  return (
+                    <DeviceCard
+                      key={ref.room + ref.name}
+                      status={device.status}
+                    >
+                      <Box
+                        sx={{
                           display: "flex",
+                          flexDirection: "column",
                           alignItems: "center",
-                          marginBottom: 8,
+                          gap: 1,
                         }}
                       >
-                        <span style={{ flex: 1 }}>{relay}</span>
-                        <label className="switch">
-                          <input
-                            type="checkbox"
-                            checked={isOn}
-                            onChange={(e) => {
-                              setUserInitiatedMap((prev) => ({ ...prev, [key]: true }));
-                              sendCommand(room, relay, e.target.checked ? "ON" : "OFF");
-                            }}
-                          />
-                          <span className="slider round"></span>
-                        </label>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Simple CSS for switch */}
-          <style>{`
-            .switch {
-              position: relative;
-              display: inline-block;
-              width: 40px;
-              height: 22px;
-            }
-            .switch input {display:none;}
-            .slider {
-              position: absolute;
-              cursor: pointer;
-              top: 0; left: 0; right: 0; bottom: 0;
-              background-color: #ccc;
-              transition: .4s;
-              border-radius: 22px;
-            }
-            .slider:before {
-              position: absolute;
-              content: "";
-              height: 18px;
-              width: 18px;
-              left: 2px;
-              bottom: 2px;
-              background-color: white;
-              transition: .4s;
-              border-radius: 50%;
-            }
-            input:checked + .slider {
-              background-color: #4caf50;
-            }
-            input:checked + .slider:before {
-              transform: translateX(18px);
-            }
-          `}</style>
-        </div>
-      )}
-      {currentSection === "switches" && (
-        <div>
-          <h2>Switches</h2>
-          <button onClick={fetchRelayData}>Refresh Switches</button>
-          {Object.keys(roomRelayMap).map((room) => (
-            <div key={room} style={{ border: "1px solid #ccc", margin: 8, padding: 8 }}>
-              <h3>{room}</h3>
-              {roomRelayMap[room].map(({ relay, isOn }) => {
-                const key = `${room}_${relay}`;
-                return (
-                  <div key={key} style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
-                    <span style={{ marginRight: 8 }}>{relay}</span>
-                    <input
-                      type="checkbox"
-                      checked={isOn}
-                      onChange={(e) => {
-                        setUserInitiatedMap((prev) => ({ ...prev, [key]: true }));
-                        sendCommand(room, relay, e.target.checked ? "ON" : "OFF");
+                        <IconToggle
+                          status={device.status}
+                          disabled={isGuest}
+                          onClick={() =>
+                            !isGuest && handleDeviceToggle(ref.room, ref.name)
+                          }
+                          sx={{ fontSize: "1.5rem", mb: 1 }}
+                        >
+                          {getDeviceEmoji(device.name)}
+                        </IconToggle>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {device.name}
+                        </Typography>
+                      </Box>
+                    </DeviceCard>
+                  );
+                })}
+            </Box>
+          </Paper>
+        </Grid>
+      </Grid>
+
+      {/* Room Controls and Energy Consumption */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={12}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <StyledPaper>
+              <Typography variant="h6" gutterBottom>
+                Room Controls
+              </Typography>
+              <Grid container spacing={2}>
+                {rooms.map(room => (
+                  <Grid item xs={12} md={6} key={room.id}>
+                    <RoomSection>
+                      <RoomHeader onClick={() => handleRoomClick(room.id)}>
+                        <Box className="room-header" sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", p: 2 }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                            {getRoomIcon(room.id)}
+                            <Typography variant="h6" sx={{ fontWeight: 600 }}>{room.id}</Typography>
+                          </Box>
+                          </Box>
+                        {selectedRoom === room.id ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                      </RoomHeader>
+                      <Collapse in={selectedRoom === room.id}>
+                        <Box sx={{ p: 2 }}>
+                          <RoomSummary>
+                            <Typography variant="subtitle2" sx={{ color: "success.main" }}>
+                              {roomsData[room.id]?.devices?.filter(
+                                (d) => d.name !== "Only Smart TV" && d.status
+                              ).length || 0}{" "}
+                              ON
+                            </Typography>
+                            <Typography variant="subtitle2" sx={{ color: "error.main" }}>
+                              {roomsData[room.id]?.devices?.filter(
+                                (d) => d.name !== "Only Smart TV" && !d.status
+                              ).length || 0}{" "}
+                              OFF
+                            </Typography>
+                          </RoomSummary>
+                          <Box sx={{ mt: 2 }}>
+                            {(room.relays || []).map((relay, idx) => (
+                              <DeviceCard key={relay.name} status={states[`${room.id}_${relay.name}`] === 'ON'}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                  <DeviceStatusBadge status={states[`${room.id}_${relay.name}`] === 'ON'} />
+                                  <DeviceIcon sx={{ color: states[`${room.id}_${relay.name}`] === 'ON' ? 'success.main' : 'error.main' }}>
+                                    {getDeviceIcon(relay.name)}
+                                    </DeviceIcon>
+                                  <Typography variant="subtitle1" sx={{ flex: 1 }}>{relay.name}</Typography>
+                                        <IconToggle
+                                    status={states[`${room.id}_${relay.name}`] === 'ON'}
+                                          disabled={isGuest}
+                                    onClick={() => !isGuest && handleDeviceToggle(room.id, relay.name)}
+                                    sx={{ fontSize: '1.5rem' }}
+                                        >
+                                    {getDeviceEmoji(relay.name)}
+                                        </IconToggle>
+                                  </Box>
+                                </DeviceCard>
+                              ))}
+                          </Box>
+                        </Box>
+                      </Collapse>
+                    </RoomSection>
+                  </Grid>
+                ))}
+              </Grid>
+            </StyledPaper>
+          </motion.div>
+        </Grid>
+        <Grid item xs={12} md={12}>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <StyledPaper>
+              {/* New Block: Device and Room Stats */}
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: { xs: "column", sm: "row" },
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 3,
+                  mb: 4,
+                  p: 3,
+                  borderRadius: 3,
+                  background: "rgba(255,255,255,0.03)",
+                  boxShadow: 2,
+                }}
+              >
+                {isMobile ? (
+                  <Paper
+                    elevation={3}
+                    sx={{
+                      display: "flex",
+                      gap: 2,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      mb: 2,
+                      p: 2,
+                      borderRadius: 3,
+                      boxShadow: 4,
+                      bgcolor: "background.paper",
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        flex: 1,
+                        minWidth: 110,
                       }}
+                    >
+                      <DevicesIcon
+                        sx={{ color: "primary.main", fontSize: 28, mb: 0.5 }}
+                      />
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600, textAlign: "center", mb: 0.5 }}
+                      >
+                        Devices ON / Total
+                      </Typography>
+                      <Typography
+                        variant="h5"
+                        sx={{
+                          fontWeight: 800,
+                          color: "primary.main",
+                          textAlign: "center",
+                          fontSize: "2rem",
+                          letterSpacing: 1,
+                        }}
+                      >
+                        {deviceStats.on}{" "}
+                        <span style={{ color: "#888", fontWeight: 500 }}>
+                          /
+                        </span>{" "}
+                        {deviceStats.total}
+                      </Typography>
+                    </Box>
+                    <Divider
+                      orientation="vertical"
+                      flexItem
+                      sx={{ mx: 1, borderColor: "divider" }}
                     />
-                  </div>
-                );
-              })}
-            </div>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        flex: 1,
+                        minWidth: 110,
+                      }}
+                    >
+                      <MeetingRoomIcon
+                        sx={{ color: "success.main", fontSize: 28, mb: 0.5 }}
+                      />
+                      <Typography
+                        variant="subtitle2"
+                        color="text.secondary"
+                        sx={{ fontWeight: 600, textAlign: "center", mb: 0.5 }}
+                      >
+                        Occupied Rooms / Total
+                      </Typography>
+                      <Button
+                        size="small"
+                        onClick={handleOccupiedClick}
+                        sx={{
+                          color: "success.main",
+                          fontWeight: 800,
+                          fontSize: "2rem",
+                          textTransform: "none",
+                          p: 0,
+                          minWidth: 0,
+                          lineHeight: 1.1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                        endIcon={<ExpandMoreIcon sx={{ fontSize: "2rem" }} />}
+                      >
+                        {roomStats.occupied}{" "}
+                        <span style={{ color: "#888", fontWeight: 500 }}>
+                          /
+                        </span>{" "}
+                        {roomStats.total}
+                      </Button>
+                    </Box>
+                  </Paper>
+                ) : (
+                  <>
+                    <Box>
+                      <Typography
+                        variant="subtitle1"
+                        color="text.secondary"
+                        sx={{ fontWeight: 500 }}
+                      >
+                        Devices ON / Total
+                      </Typography>
+                      <Typography
+                        variant="h5"
+                        sx={{ fontWeight: 700, color: "primary.main" }}
+                      >
+                        {deviceStats.on} / {deviceStats.total}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ position: "relative", display: "inline-block" }}>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Occupied Rooms / Total
+                      </Typography>
+                      <Button
+                        size="small"
+                        onClick={handleOccupiedClick}
+                        sx={{
+                          color: "secondary.main",
+                          fontWeight: 800,
+                          fontSize: "2rem", // Increased font size
+                          textTransform: "none",
+                          p: 0,
+                          minWidth: 0,
+                          ml: 1,
+                          verticalAlign: "middle",
+                          lineHeight: 1.1,
+                          display: "inline-flex",
+                          alignItems: "center",
+                        }}
+                        endIcon={<ExpandMoreIcon sx={{ fontSize: "2rem" }} />} // Make icon bigger
+                      >
+                        {roomStats.occupied} / {roomStats.total}
+                      </Button>
+                      <Menu
+                        anchorEl={occupiedAnchorEl}
+                        open={occupiedOpen}
+                        onClose={handleOccupiedClose}
+                        PaperProps={{ sx: { minWidth: 200 } }}
+                        anchorOrigin={{
+                          vertical: "bottom",
+                          horizontal: "left",
+                        }}
+                        transformOrigin={{
+                          vertical: "top",
+                          horizontal: "left",
+                        }}
+                      >
+                        {Object.entries(roomsData).map(
+                          ([roomName, roomData]) => {
+                            const isOccupied =
+                              roomData.devices &&
+                              roomData.devices.some((d) => d.status);
+                            return (
+                              <MenuItem key={roomName} dense>
+                                <Box
+                                  sx={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 1,
+                                  }}
+                                >
+                                  <Box
+                                    sx={{
+                                      width: 10,
+                                      height: 10,
+                                      borderRadius: "50%",
+                                      bgcolor: isOccupied
+                                        ? "success.main"
+                                        : "grey.500",
+                                      mr: 1,
+                                    }}
+                                  />
+                                  <Typography
+                                    variant="body2"
+                                    sx={{
+                                      color: isOccupied
+                                        ? "success.main"
+                                        : "text.secondary",
+                                      fontWeight: isOccupied ? 600 : 400,
+                                    }}
+                                  >
+                                    {roomName}
+                                  </Typography>
+                                  <Typography
+                                    variant="caption"
+                                    sx={{ color: "text.secondary", ml: 1 }}
+                                  >
+                                    {isOccupied ? "Occupied" : "Not Occupied"}
+                                  </Typography>
+                                </Box>
+                              </MenuItem>
+                            );
+                          },
+                        )}
+                      </Menu>
+                    </Box>
+                  </>
+                )}
+              </Box>
+
+              <Box sx={{ mb: 3 }}>
+                <Typography
+                  variant="h5"
+                  gutterBottom
+                  sx={{
+                    fontWeight: 600,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                  }}
+                >
+                  <ElectricBoltIcon color="primary" />
+                  Energy Consumption
+                </Typography>
+                <StyledButtonGroup sx={{ mb: 2 }}>
+                  {["hourly", "daily", "weekly", "monthly"].map((view) => (
+                    <Button
+                      key={view}
+                      variant={energyView === view ? "contained" : "outlined"}
+                      onClick={() => setEnergyView(view)}
+                      startIcon={
+                        view === "hourly" ? (
+                          <AccessTimeIcon />
+                        ) : view === "daily" ? (
+                          <CalendarTodayIcon />
+                        ) : view === "weekly" ? (
+                          <DateRangeIcon />
+                        ) : (
+                          <CalendarMonthIcon />
+                        )
+                      }
+                    >
+                      {view}
+                    </Button>
+                  ))}
+                </StyledButtonGroup>
+              </Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={8}>
+                  <Box
+                    sx={(theme) => ({
+                      height: { xs: "50vh", sm: "45vh", md: "60vh" },
+                      minHeight: 180,
+                      position: "relative",
+                      bgcolor:
+                        theme.palette.mode === "dark"
+                          ? "rgba(20,22,30,0.85)"
+                          : "rgba(255,255,255,0.85)",
+                      borderRadius: 4,
+                      boxShadow: "0 4px 32px 0 rgba(255,140,0,0.08)",
+                      p: { xs: 1, sm: 2, md: 3 },
+                    })}
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RechartsLineChart
+                        data={filteredEnergyData}
+                        margin={{ top: 30, right: 40, left: 20, bottom: 30 }}
+                      >
+                        <defs>
+                          <linearGradient
+                            id="vibrantGradient"
+                            x1="0"
+                            y1="0"
+                            x2="1"
+                            y2="0"
+                          >
+                            <stop offset="0%" stopColor="#ffe259" />
+                            <stop offset="50%" stopColor="#ffa751" />
+                            <stop offset="100%" stopColor="#ff6a00" />
+                          </linearGradient>
+                          <filter
+                            id="glow"
+                            x="-50%"
+                            y="-50%"
+                            width="200%"
+                            height="200%"
+                          >
+                            <feGaussianBlur
+                              stdDeviation="6"
+                              result="coloredBlur"
+                            />
+                            <feMerge>
+                              <feMergeNode in="coloredBlur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+                        <RechartsCartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="rgba(255,255,255,0.08)"
+                        />
+                        <RechartsXAxis
+                          dataKey="label"
+                          stroke="#ffe259"
+                          tick={{
+                            fill: "#40a9ff",
+                            fontWeight: "bold",
+                            fontSize: 15,
+                            fontFamily: "Roboto, sans-serif",
+                          }}
+                          tickLine={{ stroke: "#ffa751", strokeWidth: 2 }}
+                          axisLine={{ stroke: "#ffa751", strokeWidth: 2 }}
+                          label={{
+                            value: "",
+                            fontWeight: "bold",
+                            fontSize: 17,
+                            position: "insideBottom",
+                            fill: "#ffe259",
+                          }}
+                          tickFormatter={(label) => {
+                            // Try to parse as date, fallback to label
+                            const date = new Date(label);
+                            if (!isNaN(date.getTime())) {
+                              return date.toLocaleTimeString("en-US", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              });
+                            }
+                            // If label is already time, just return it
+                            return label;
+                          }}
+                        />
+                        <RechartsYAxis
+                          label={{
+                            value: "Consumption (kW)",
+                            angle: -90,
+                            position: "insideLeft",
+                            fill: "#ffe259",
+                            fontWeight: "bold",
+                            fontSize: 17,
+                          }}
+                          domain={
+                            energyView === "hourly"
+                              ? [0, 2.5]
+                              : energyView === "daily"
+                                ? [0, 45]
+                                : energyView === "weekly"
+                                  ? [0, 250]
+                                  : [0, 1200]
+                          }
+                          tickCount={6}
+                          tickFormatter={(value) =>
+                            energyView === "hourly"
+                              ? value.toFixed(1)
+                              : value % 1 === 0
+                                ? value.toString()
+                                : value.toFixed(1)
+                          }
+                          stroke="#ffe259"
+                          tick={{
+                            fill: "#40a9ff",
+                            fontWeight: "bold",
+                            fontSize: 15,
+                            fontFamily: "Roboto, sans-serif",
+                          }}
+                          tickLine={{ stroke: "#ffa751", strokeWidth: 2 }}
+                          axisLine={{ stroke: "#ffa751", strokeWidth: 2 }}
+                        />
+                        {/* Dashed average line */}
+                        <RechartsLine
+                          type="monotone"
+                          dataKey={() =>
+                            filteredEnergyData.reduce(
+                              (sum, d) => sum + d.consumption,
+                              0,
+                            ) / filteredEnergyData.length
+                          }
+                          stroke="#fff"
+                          strokeDasharray="6 6"
+                          dot={false}
+                          isAnimationActive={false}
+                          strokeWidth={2}
+                          opacity={0.4}
+                        />
+                        {/* Main vibrant line with glow */}
+                        <RechartsLine
+                          type="monotone"
+                          dataKey="consumption"
+                          stroke="url(#vibrantGradient)"
+                          strokeWidth={5}
+                          dot={({ cx, cy, index }) => {
+                            // Highlight max/min points
+                            const values = filteredEnergyData.map(
+                              (d) => d.consumption,
+                            );
+                            const max = Math.max(...values);
+                            const min = Math.min(...values);
+                            const isMax =
+                              filteredEnergyData[index].consumption === max;
+                            const isMin =
+                              filteredEnergyData[index].consumption === min;
+                            if (isMax || isMin) {
+                              return (
+                                <circle
+                                  cx={cx}
+                                  cy={cy}
+                                  r={10}
+                                  fill={isMax ? "#ffe259" : "#ff6a00"}
+                                  stroke="#fff"
+                                  strokeWidth={3}
+                                  filter="url(#glow)"
+                                />
+                              );
+                            }
+                            return null;
+                          }}
+                          activeDot={{
+                            r: 10,
+                            fill: "#fff",
+                            stroke: "#ffa751",
+                            strokeWidth: 4,
+                            filter: "url(#glow)",
+                          }}
+                          filter="url(#glow)"
+                          animationDuration={1800}
+                          animationEasing="ease-in-out"
+                        />
+                        {/* Data labels for max/min points */}
+                        {filteredEnergyData.length > 0 &&
+                          (() => {
+                            const values = filteredEnergyData.map(
+                              (d) => d.consumption,
+                            );
+                            const max = Math.max(...values);
+                            const min = Math.min(...values);
+                            return [
+                              <RechartsTooltip
+                                key="tooltip"
+                                content={({ active, payload, label }) => {
+                                  if (active && payload && payload.length) {
+                                    const consumption =
+                                      payload[0]?.payload?.consumption ??
+                                      payload[0]?.value;
+                                    // Calculate average for the current filtered data
+                                    const avg =
+                                      filteredEnergyData.reduce(
+                                        (sum, d) => sum + d.consumption,
+                                        0,
+                                      ) / filteredEnergyData.length;
+                                    return (
+                                      <div
+                                        style={{
+                                          background: "#181c24",
+                                          border: "2px solid #ffa751",
+                                          borderRadius: 16,
+                                          padding: 18,
+                                          color: "#ffe259",
+                                          fontWeight: 700,
+                                          fontSize: 18,
+                                          boxShadow: "0 2px 16px #ff6a00",
+                                          minWidth: 130,
+                                          textAlign: "center",
+                                        }}
+                                      >
+                                        <div
+                                          style={{
+                                            color: "#ffe259",
+                                            fontWeight: 800,
+                                            fontSize: 22,
+                                            marginBottom: 6,
+                                          }}
+                                        >
+                                          {label}
+                                        </div>
+                                        <div
+                                          style={{
+                                            color: "#40a9ff",
+                                            fontWeight: 700,
+                                            fontSize: 24,
+                                          }}
+                                        >
+                                          {consumption?.toFixed(2)} kW
+                                        </div>
+                                        <div
+                                          style={{
+                                            color: "#ffe259",
+                                            fontWeight: 500,
+                                            fontSize: 15,
+                                            marginTop: 8,
+                                          }}
+                                        >
+                                          Avg: {avg.toFixed(2)} kW
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                                cursor={{
+                                  stroke: "#ffa751",
+                                  strokeWidth: 2,
+                                  strokeDasharray: "5 5",
+                                }}
+                              />,
+                            ];
+                          })()}
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                  </Box>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Stack spacing={2}>
+                    {/* Today's Summary */}
+                    <SummaryCard>
+                      <SummaryHeader
+                        onClick={() =>
+                          setExpandedSummary(
+                            expandedSummary === "today" ? null : "today",
+                          )
+                        }
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <TodayIcon color="primary" />
+                          <Typography variant="h6">
+                            Today's Energy Summary
+                          </Typography>
+                        </Box>
+                        <IconButton size="small">
+                          {expandedSummary === "today" ? (
+                            <ExpandLessIcon />
+                          ) : (
+                            <ExpandMoreIcon />
+                          )}
+                        </IconButton>
+                      </SummaryHeader>
+                      <Collapse in={expandedSummary === "today"}>
+                        <SummaryContent>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography
+                              variant="h4"
+                              color="primary"
+                              sx={{ flexGrow: 1 }}
+                            >
+                              {hourlyData
+                                .reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                )
+                                .toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                            <Box sx={{ textAlign: "right" }}>
+                              <Typography variant="h5" color="error">
+                                ₹
+                                {(
+                                  hourlyData.reduce(
+                                    (sum, hour) => sum + hour.consumption,
+                                    0,
+                                  ) * 8
+                                ).toFixed(2)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                @ ₹8/kWh
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date().toLocaleDateString("en-US", {
+                              weekday: "long",
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </Typography>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              pt: 2,
+                              borderTop: "1px solid rgba(144, 202, 249, 0.1)",
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              color="text.secondary"
+                            >
+                              Today's Peak:{" "}
+                              {Math.max(
+                                ...hourlyData.map((h) => h.consumption),
+                              ).toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                            <Typography
+                              variant="subtitle2"
+                              color="text.secondary"
+                            >
+                              Today's Average:{" "}
+                              {(
+                                hourlyData.reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                ) / 24
+                              ).toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                          </Box>
+                        </SummaryContent>
+                      </Collapse>
+                    </SummaryCard>
+
+                    {/* Yesterday's Summary */}
+                    <SummaryCard>
+                      <SummaryHeader
+                        onClick={() =>
+                          setExpandedSummary(
+                            expandedSummary === "yesterday"
+                              ? null
+                              : "yesterday",
+                          )
+                        }
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                        >
+                          <HistoryIcon color="primary" />
+                          <Typography variant="h6">
+                            Yesterday's Energy Summary
+                          </Typography>
+                        </Box>
+                        <IconButton size="small">
+                          {expandedSummary === "yesterday" ? (
+                            <ExpandLessIcon />
+                          ) : (
+                            <ExpandMoreIcon />
+                          )}
+                        </IconButton>
+                      </SummaryHeader>
+                      <Collapse in={expandedSummary === "yesterday"}>
+                        <SummaryContent>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              mb: 1,
+                            }}
+                          >
+                            <Typography
+                              variant="h4"
+                              color="primary"
+                              sx={{ flexGrow: 1 }}
+                            >
+                              {(
+                                hourlyData.reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                ) * 0.85
+                              ).toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                            <Box sx={{ textAlign: "right" }}>
+                              <Typography variant="h5" color="error">
+                                ₹
+                                {(
+                                  hourlyData.reduce(
+                                    (sum, hour) => sum + hour.consumption,
+                                    0,
+                                  ) *
+                                  0.85 *
+                                  8
+                                ).toFixed(2)}
+                              </Typography>
+                              <Typography
+                                variant="caption"
+                                color="text.secondary"
+                              >
+                                @ ₹8/kWh
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <Typography variant="body2" color="text.secondary">
+                            {new Date(Date.now() - 86400000).toLocaleDateString(
+                              "en-US",
+                              {
+                                weekday: "long",
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                              },
+                            )}
+                          </Typography>
+                          <Box
+                            sx={{
+                              mt: 2,
+                              pt: 2,
+                              borderTop: "1px solid rgba(144, 202, 249, 0.1)",
+                            }}
+                          >
+                            <Typography
+                              variant="subtitle2"
+                              color="text.secondary"
+                            >
+                              Yesterday's Peak:{" "}
+                              {(
+                                Math.max(
+                                  ...hourlyData.map((h) => h.consumption),
+                                ) * 0.9
+                              ).toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                            <Typography
+                              variant="subtitle2"
+                              color="text.secondary"
+                            >
+                              Yesterday's Average:{" "}
+                              {(
+                                (hourlyData.reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                ) /
+                                  24) *
+                                0.85
+                              ).toFixed(1)}{" "}
+                              kW
+                            </Typography>
+                            <Typography
+                              variant="subtitle2"
+                              color={
+                                hourlyData.reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                ) >
+                                hourlyData.reduce(
+                                  (sum, hour) => sum + hour.consumption,
+                                  0,
+                                ) *
+                                  0.85
+                                  ? "error"
+                                  : "success.main"
+                              }
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.5,
+                                mt: 1,
+                                fontWeight: 600,
+                              }}
+                            >
+                              {hourlyData.reduce(
+                                (sum, hour) => sum + hour.consumption,
+                                0,
+                              ) >
+                              hourlyData.reduce(
+                                (sum, hour) => sum + hour.consumption,
+                                0,
+                              ) *
+                                0.85 ? (
+                                <TrendingUpIcon color="error" />
+                              ) : (
+                                <TrendingDownIcon color="success" />
+                              )}
+                              {hourlyData.reduce(
+                                (sum, hour) => sum + hour.consumption,
+                                0,
+                              ) >
+                              hourlyData.reduce(
+                                (sum, hour) => sum + hour.consumption,
+                                0,
+                              ) *
+                                0.85
+                                ? (
+                                    (hourlyData.reduce(
+                                      (sum, hour) => sum + hour.consumption,
+                                      0,
+                                    ) /
+                                      (hourlyData.reduce(
+                                        (sum, hour) => sum + hour.consumption,
+                                        0,
+                                      ) *
+                                        0.85)) *
+                                      100 -
+                                    100
+                                  ).toFixed(1) + "% higher than yesterday"
+                                : (
+                                    100 -
+                                    (hourlyData.reduce(
+                                      (sum, hour) => sum + hour.consumption,
+                                      0,
+                                    ) /
+                                      (hourlyData.reduce(
+                                        (sum, hour) => sum + hour.consumption,
+                                        0,
+                                      ) *
+                                        0.85)) *
+                                      100
+                                  ).toFixed(1) + "% lower than yesterday"}
+                            </Typography>
+                          </Box>
+                        </SummaryContent>
+                      </Collapse>
+                    </SummaryCard>
+                  </Stack>
+                  <Box
+                    sx={{ mt: 3, display: "flex", justifyContent: "center" }}
+                  >
+                    <ViewAllButton
+                      variant="contained"
+                      onClick={() => navigate("/energy-details")}
+                      startIcon={<AnalyticsIcon />}
+                    >
+                      View All Energy Details
+                    </ViewAllButton>
+                  </Box>
+                </Grid>
+              </Grid>
+            </StyledPaper>
+          </motion.div>
+        </Grid>
+      </Grid>
+
+      {/* Temperature Display */}
+      <Grid item xs={12} md={6}>
+        <TemperatureDisplay
+          roomsData={roomsData}
+          selectedRoom={selectedRoom}
+          setRoomsData={setRoomsData}
+        />
+      </Grid>
+
+      {/* Add Room Dialog */}
+      <Dialog
+        open={addRoomDialogOpen}
+        onClose={() => setAddRoomDialogOpen(false)}
+      >
+        <DialogTitle>Add New Room</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Room Name"
+            fullWidth
+            value={newRoomName}
+            onChange={(e) => setNewRoomName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddRoomDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (newRoomName.trim() && !roomsData[newRoomName.trim()]) {
+                setRoomsData((prev) => ({
+                  ...prev,
+                  [newRoomName.trim()]: { devices: [] },
+                }));
+                setRoomStates((prev) => ({
+                  ...prev,
+                  [newRoomName.trim()]: false,
+                }));
+                setAddRoomDialogOpen(false);
+                setNewRoomName("");
+              }
+            }}
+            variant="contained"
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Add Device Dialog */}
+      <Dialog
+        open={addDeviceDialogOpen}
+        onClose={() => setAddDeviceDialogOpen(false)}
+      >
+        <DialogTitle>Add Device to {addDeviceRoom}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Device Name"
+            fullWidth
+            value={newDeviceName}
+            onChange={(e) => setNewDeviceName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setAddDeviceDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              if (newDeviceName.trim()) {
+                setRoomsData((prev) => {
+                  const newRoomsData = { ...prev };
+                  newRoomsData[addDeviceRoom] = {
+                    ...newRoomsData[addDeviceRoom],
+                    devices: [
+                      ...(newRoomsData[addDeviceRoom]?.devices || []),
+                      { name: newDeviceName.trim(), status: false },
+                    ],
+                  };
+                  return newRoomsData;
+                });
+                setAddDeviceDialogOpen(false);
+                setNewDeviceName("");
+              }
+            }}
+            variant="contained"
+          >
+            Add
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Notification Bell and Menu */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 1000,
+        }}
+      >
+        <NotificationBell
+          hasNotifications={notifications.some((n) => n.unread)}
+          onClick={handleNotificationClick}
+          size="large"
+        >
+          <Badge
+            badgeContent={notifications.filter((n) => n.unread).length}
+            color="error"
+          >
+            <NotificationsIcon />
+          </Badge>
+        </NotificationBell>
+
+        <NotificationMenu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleNotificationClose}
+          TransitionComponent={Fade}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        >
+          {notifications.map((notification) => (
+            <NotificationItem
+              key={notification.id}
+              unread={notification.unread}
+              onClick={() => handleNotificationRead(notification.id)}
+            >
+              <Box className="notification-content">
+                <Typography className="notification-title">
+                  {notification.title}
+                </Typography>
+                <Typography className="notification-message">
+                  {notification.message}
+                </Typography>
+                <Typography className="notification-time">
+                  {notification.timestamp.toLocaleTimeString()}
+                </Typography>
+              </Box>
+            </NotificationItem>
           ))}
+        </NotificationMenu>
+
+        <Snackbar
+          open={toast.open}
+          autoHideDuration={4000}
+          onClose={handleToastClose}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          TransitionComponent={Slide}
+        >
+          <Alert
+            onClose={handleToastClose}
+            severity={toast.severity}
+            variant="filled"
+            sx={{
+              width: "100%",
+              backdropFilter: "blur(8px)",
+              "& .MuiAlert-icon": {
+                animation: "pulse 2s infinite",
+              },
+            }}
+          >
+            {toast.message}
+          </Alert>
+        </Snackbar>
+      </Box>
+
+      {/* Add a dialog for editing quick access devices at the bottom of the component: */}
+      <Dialog
+        open={editQuickAccessOpen}
+        onClose={() => setEditQuickAccessOpen(false)}
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            p: { xs: 2, sm: 4 },
+            bgcolor: (theme) =>
+              theme.palette.mode === "dark" ? "#23272a" : "#f5f7fa",
+            boxShadow: 8,
+            minWidth: { xs: "95vw", sm: 480 },
+            maxWidth: 600,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ fontWeight: 700, fontSize: { xs: "1.2rem", sm: "1.5rem" } }}
+        >
+          Edit Quick Access Devices
+        </DialogTitle>
+        <DialogContent>
+          <Typography
+            sx={{
+              mb: 2,
+              color: "text.secondary",
+              fontSize: { xs: "0.95rem", sm: "1.1rem" },
+            }}
+          >
+            Select devices to show in Quick Access:
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 2,
+            }}
+          >
+            {Object.entries(roomsData).flatMap(([roomName, roomData]) =>
+              (roomData?.devices || [])
+                .filter((device) => device.name !== "Only Smart TV")
+                .map((device) => {
+                  const selected = quickAccessDevices.some(
+                    (d) => d.name === device.name && d.room === roomName,
+                  );
+                  return (
+                    <Box
+                      key={roomName + device.name}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        p: 2,
+                        borderRadius: 3,
+                        minHeight: 90,
+                        boxShadow: selected ? 4 : 1,
+                        bgcolor: selected
+                          ? (theme) =>
+                              theme.palette.mode === "dark"
+                                ? "rgba(33,150,243,0.15)"
+                                : "rgba(33,150,243,0.08)"
+                          : (theme) => theme.palette.background.paper,
+                        border: selected ? "2px solid" : "1px solid",
+                        borderColor: selected ? "primary.main" : "divider",
+                        transition: "all 0.2s",
+                        cursor: "pointer",
+                        "&:hover": {
+                          boxShadow: 6,
+                          borderColor: "primary.main",
+                          bgcolor: (theme) => theme.palette.action.hover,
+                        },
+                      }}
+                      onClick={() => {
+                        if (selected) {
+                          setQuickAccessDevices((prev) =>
+                            prev.filter(
+                              (d) =>
+                                !(
+                                  d.name === device.name && d.room === roomName
+                                ),
+                            ),
+                          );
+                        } else {
+                          setQuickAccessDevices((prev) => [
+                            ...prev,
+                            { name: device.name, room: roomName },
+                          ]);
+                        }
+                      }}
+                    >
+                      <Checkbox
+                        checked={selected}
+                        color="primary"
+                        sx={{
+                          mb: 1,
+                          "& .MuiSvgIcon-root": { fontSize: 28 },
+                        }}
+                        onChange={() => {}} // Prevents double toggle on click, handled by parent
+                        tabIndex={-1}
+                        disableRipple
+                      />
+                      <Typography
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: "1.1rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        {device.name}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          color: "text.secondary",
+                          fontSize: "0.95rem",
+                          textAlign: "center",
+                        }}
+                      >
+                        {roomName}
+                      </Typography>
+                    </Box>
+                  );
+                }),
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setEditQuickAccessOpen(false)}
+            variant="contained"
+            color="primary"
+            fullWidth
+            sx={{
+              borderRadius: 2,
+              fontWeight: 700,
+              fontSize: { xs: "1.1rem", sm: "1.2rem" },
+              boxShadow: 2,
+              py: 1.5,
+              letterSpacing: 1,
+            }}
+          >
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+        {/* Simple Relay Control Section */}
+        <div style={{ margin: '24px 0', padding: '16px', border: '1px solid #ccc', borderRadius: 8 }}>
+          <h3>Relay Control</h3>
+          {false && <p>No relays found.</p>}
+          {[]}
         </div>
-      )}
-      {currentSection === "visualization" && (
-        <div>
-          <h2>Visualization</h2>
-          {/* Visualization content here */}
-        </div>
-      )}
-      {currentSection === "settings" && (
-        <div>
-          <h2>Settings</h2>
-          {/* Settings content here */}
-        </div>
-      )}
-    </div>
+    </Box>
+    </>
   );
-}
+};
 
 export default Dashboard;

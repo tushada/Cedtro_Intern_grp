@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase/config";
 
-const API_URL = "https://713e555cdc8d.ngrok-free.app/data";
-const NODE_RED_URL = "https://webmaster-writers-context-capabilities.trycloudflare.com/data";
+const API_URL = "http://localhost:5000";
+const NODE_RED_URL = "https://helping-commissioner-diff-ser.trycloudflare.com/data";
 
 function Login() {
   const [input, setInput] = useState("");

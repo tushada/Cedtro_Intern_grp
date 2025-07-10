@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
 import Home from './components/Home';
@@ -35,6 +35,19 @@ const lightTheme = createTheme({
   },
 });
 
+function Layout({ children, themeMode, setThemeMode }) {
+  const location = useLocation();
+  const hideSidebar = location.pathname === '/login' || location.pathname === '/register';
+  return (
+    <div style={{ display: 'flex' }}>
+      {!hideSidebar && (
+        <Sidebar themeMode={themeMode} setThemeMode={setThemeMode} authenticated={true} isGuest={false} />
+      )}
+      <div style={{ flex: 1 }}>{children}</div>
+    </div>
+  );
+}
+
 function App() {
   const [themeMode, setThemeMode] = useState('light');
   const theme = themeMode === 'dark' ? darkTheme : lightTheme;
@@ -43,18 +56,21 @@ function App() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Registration />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<UserProfile />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/energy" element={<EnergyDetails />} />
-          <Route path="/logout" element={<Logout />} />
-          <Route path="/messages" element={<Messages />} />
-          <Route path="/" element={<Navigate to="/login" />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
+        <Layout themeMode={themeMode} setThemeMode={setThemeMode}>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Registration />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<UserProfile />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/energy" element={<EnergyDetails />} />
+            <Route path="/logout" element={<Logout />} />
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </ThemeProvider>
   );
