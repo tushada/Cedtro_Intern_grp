@@ -25,8 +25,9 @@ import {
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { motion } from "framer-motion";
-import { auth } from "../firebase/config";
+import { auth, db } from "../firebase/config";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   minHeight: "100vh",
@@ -138,11 +139,14 @@ const StyledButton = styled(Button)(({ theme }) => ({
 
 const Registration = ({ onRegister, onNavigate }) => {
   const navigate = useNavigate();
+  // Generate a default homeId
+  const defaultHomeId = "home_" + Math.random().toString(36).substring(2, 10);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    homeId: defaultHomeId, // <-- add this
   });
 
   const [errors, setErrors] = useState({});
@@ -222,6 +226,24 @@ const Registration = ({ onRegister, onNavigate }) => {
       // Update user profile with full name
       await updateProfile(userCredential.user, {
         displayName: formData.fullName,
+      });
+
+      // Use the entered Home ID
+      const updateHomeId = formData.homeId;
+      const defaultRoom = "living_room";
+      const defaultRelays = [
+        { name: "light", type: "switch" },
+        { name: "fan", type: "switch" },
+      ];
+      // Create the home document (if not exists)
+      await setDoc(doc(db, "homes", updateHomeId), {});
+      // Add a default room with relays
+      await setDoc(doc(db, "homes", updateHomeId, "rooms", defaultRoom), { relays: defaultRelays });
+      // Store user info in users collection
+      await setDoc(doc(db, "users", userCredential.user.uid), {
+        username: formData.fullName,
+        email: formData.email,
+        updateHomeId,
       });
 
       // Call the onRegister prop with the form data
@@ -483,6 +505,18 @@ const Registration = ({ onRegister, onNavigate }) => {
                         </InputAdornment>
                       ),
                     }}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <StyledTextField
+                    fullWidth
+                    label="Home ID"
+                    name="homeId"
+                    value={formData.homeId}
+                    onChange={handleChange}
+                    helperText="You can use the default or enter your own Home ID."
+                    margin="normal"
                   />
                 </Grid>
               </Grid>
