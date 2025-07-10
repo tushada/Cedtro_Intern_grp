@@ -1367,115 +1367,143 @@ function Dashboard() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f6f8fa', padding: '0', margin: '0' }}>
-      <div style={{ maxWidth: 900, margin: '32px auto', padding: 24, background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', minHeight: 500 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <span style={{ fontSize: 24, fontWeight: 600 }}>🏠 Dashboard</span>
-            <div style={{ fontSize: 16, color: '#555', marginTop: 4 }}>{greeting}</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: 16, color: '#888' }}>{dateTime}</span>
-            <br />
-            <button onClick={logout} style={{ marginTop: 8, padding: '6px 18px', borderRadius: 6, background: '#f44336', color: '#fff', border: 'none', fontWeight: 500, cursor: 'pointer' }}>Logout</button>
-          </div>
-        </div>
-        <hr style={{ margin: '16px 0 24px 0', border: 0, borderTop: '1px solid #eee' }} />
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#222' }}>Home Items</h2>
-          <button onClick={fetchRelayData} style={{ marginLeft: 20, padding: '7px 20px', borderRadius: 6, background: '#1976d2', color: '#fff', border: 'none', fontWeight: 500, fontSize: 15, cursor: 'pointer', boxShadow: '0 2px 8px rgba(25,118,210,0.08)' }}>Refresh</button>
-        </div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, marginTop: 8, justifyContent: 'flex-start' }}>
-          {Object.keys(roomRelayMap).length === 0 && <div style={{ color: '#888', fontSize: 18 }}>No rooms found.</div>}
-          {Object.entries(roomRelayMap).map(([room, relays]) => (
-            <div
-              key={room}
-              style={{
-                border: '1px solid #e0e0e0',
-                borderRadius: 12,
-                padding: 20,
-                minWidth: 240,
-                background: '#fafbfc',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                transition: 'box-shadow 0.2s',
-                marginBottom: 12,
-                flex: '1 1 260px',
-                maxWidth: 320,
-              }}
-              onMouseOver={e => e.currentTarget.style.boxShadow = '0 4px 24px rgba(25,118,210,0.10)'}
-              onMouseOut={e => e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.04)'}
-            >
-              <h3 style={{ marginBottom: 16, fontSize: 20, color: '#1976d2', fontWeight: 600 }}>{room}</h3>
-              <div>
-                {relays.map(({ relay, isOn }) => {
-                  const key = `${room}_${relay}`;
-                  return (
-                    <div
-                      key={relay}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        marginBottom: 14,
-                        padding: '6px 0',
-                        borderBottom: '1px solid #f0f0f0',
-                        fontSize: 16,
-                      }}
-                    >
-                      <span style={{ flex: 1, color: '#333' }}>{relay}</span>
-                      <label className="switch">
-                        <input
-                          type="checkbox"
-                          checked={isOn}
-                          onChange={(e) => {
-                            setUserInitiatedMap((prev) => ({ ...prev, [key]: true }));
-                            sendCommand(room, relay, e.target.checked ? "ON" : "OFF");
-                          }}
-                        />
-                        <span className="slider round"></span>
-                      </label>
-                    </div>
-                  );
-                })}
+    <div>
+      <div>
+        <span>{greeting}</span>
+        <span style={{ float: "right" }}>{dateTime}</span>
+      </div>
+      <button onClick={logout}>Logout</button>
+      <div>
+        <button onClick={() => setCurrentSection("home")}>Home</button>
+        <button onClick={() => setCurrentSection("switches")}>Switches</button>
+        <button onClick={() => setCurrentSection("visualization")}>Visualization</button>
+        <button onClick={() => setCurrentSection("settings")}>Settings</button>
+      </div>
+      {currentSection === "home" && (
+        <div>
+          <h2>Home Items</h2>
+          <button onClick={fetchRelayData}>Refresh Home Items</button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, marginTop: 16 }}>
+            {Object.keys(roomRelayMap).length === 0 && <div>No rooms found.</div>}
+            {Object.entries(roomRelayMap).map(([room, relays]) => (
+              <div
+                key={room}
+                style={{
+                  border: "1px solid #ccc",
+                  borderRadius: 8,
+                  padding: 16,
+                  minWidth: 220,
+                  background: "#fafafa",
+                }}
+              >
+                <h3 style={{ marginBottom: 12 }}>{room}</h3>
+                <div>
+                  {relays.map(({ relay, isOn }) => {
+                    const key = `${room}_${relay}`;
+                    return (
+                      <div
+                        key={relay}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <span style={{ flex: 1 }}>{relay}</span>
+                        <label className="switch">
+                          <input
+                            type="checkbox"
+                            checked={isOn}
+                            onChange={(e) => {
+                              setUserInitiatedMap((prev) => ({ ...prev, [key]: true }));
+                              sendCommand(room, relay, e.target.checked ? "ON" : "OFF");
+                            }}
+                          />
+                          <span className="slider round"></span>
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
+            ))}
+          </div>
+          {/* Simple CSS for switch */}
+          <style>{`
+            .switch {
+              position: relative;
+              display: inline-block;
+              width: 40px;
+              height: 22px;
+            }
+            .switch input {display:none;}
+            .slider {
+              position: absolute;
+              cursor: pointer;
+              top: 0; left: 0; right: 0; bottom: 0;
+              background-color: #ccc;
+              transition: .4s;
+              border-radius: 22px;
+            }
+            .slider:before {
+              position: absolute;
+              content: "";
+              height: 18px;
+              width: 18px;
+              left: 2px;
+              bottom: 2px;
+              background-color: white;
+              transition: .4s;
+              border-radius: 50%;
+            }
+            input:checked + .slider {
+              background-color: #4caf50;
+            }
+            input:checked + .slider:before {
+              transform: translateX(18px);
+            }
+          `}</style>
+        </div>
+      )}
+      {currentSection === "switches" && (
+        <div>
+          <h2>Switches</h2>
+          <button onClick={fetchRelayData}>Refresh Switches</button>
+          {Object.keys(roomRelayMap).map((room) => (
+            <div key={room} style={{ border: "1px solid #ccc", margin: 8, padding: 8 }}>
+              <h3>{room}</h3>
+              {roomRelayMap[room].map(({ relay, isOn }) => {
+                const key = `${room}_${relay}`;
+                return (
+                  <div key={key} style={{ display: "flex", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ marginRight: 8 }}>{relay}</span>
+                    <input
+                      type="checkbox"
+                      checked={isOn}
+                      onChange={(e) => {
+                        setUserInitiatedMap((prev) => ({ ...prev, [key]: true }));
+                        sendCommand(room, relay, e.target.checked ? "ON" : "OFF");
+                      }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           ))}
         </div>
-        {/* Simple CSS for switch */}
-        <style>{`
-          .switch {
-            position: relative;
-            display: inline-block;
-            width: 44px;
-            height: 24px;
-          }
-          .switch input {display:none;}
-          .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-          }
-          .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-          }
-          input:checked + .slider {
-            background-color: #1976d2;
-          }
-          input:checked + .slider:before {
-            transform: translateX(20px);
-          }
-        `}</style>
-      </div>
+      )}
+      {currentSection === "visualization" && (
+        <div>
+          <h2>Visualization</h2>
+          {/* Visualization content here */}
+        </div>
+      )}
+      {currentSection === "settings" && (
+        <div>
+          <h2>Settings</h2>
+          {/* Settings content here */}
+        </div>
+      )}
     </div>
   );
 }
