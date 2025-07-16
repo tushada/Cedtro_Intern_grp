@@ -154,7 +154,7 @@ export default function Sidebar({ currentPage, setCurrentPage, authenticated, is
             </Avatar>
             <Box>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                John Doe
+                Preethi & Akhila
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Administrator

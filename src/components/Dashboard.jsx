@@ -1166,8 +1166,13 @@ const ViewAllButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-// Hardcoded house members for now
-const houseMembers = ['Alex', 'Priya', 'Sam'];
+// Replace houseMembers with the requested names
+const houseMembers = [
+  'Tushar Das',
+  'Sai Eswar',
+  'Vedansh',
+  'Harshith',
+];
 
 // Utility functions for device and room stats
 const getDeviceStats = (roomsData) => {
@@ -1453,6 +1458,14 @@ const HorizontalDeviceCard = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
   transition: 'background 0.2s, border 0.2s',
 }));
+
+// Add this above the Dashboard component
+const housePhotos = [
+  'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+  'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=400&q=80',
+];
 
 const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, username }) => {
   const navigate = useNavigate();
@@ -2300,11 +2313,11 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
             : 'linear-gradient(90deg, #e3f2fd 0%, #ffffff 100%)',
           color: theme.palette.mode === 'dark' ? theme.palette.primary.contrastText : theme.palette.text.primary,
           borderRadius: 4,
-          p: 4,
+          p: 2,
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 4,
+          justifyContent: 'flex-start',
+          gap: 8,
           position: 'relative',
           overflow: 'hidden',
         })}
@@ -2342,10 +2355,19 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
               textAlign: 'center',
               border: `1.5px solid ${theme.palette.primary.main}`,
               fontFamily: "'Orbitron', monospace",
+              ml: '5vw',
+              mr: 6,
             })}
           >
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'inherit', mb: 0.5 }}>
-              {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            <Typography variant="h4" sx={{ fontWeight: 700, color: 'inherit', mb: 0.5, display: 'flex', alignItems: 'baseline', justifyContent: 'center' }}>
+              {(() => {
+                const timeString = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+                const [time, ampm] = timeString.split(' ');
+                return <>
+                  {time}
+                  <span style={{ fontSize: '1rem', marginLeft: 6, color: '#90caf9', fontWeight: 500 }}>{ampm}</span>
+                </>;
+              })()}
             </Typography>
             <Typography variant="subtitle2" sx={(theme) => ({ color: theme.palette.primary.main, fontWeight: 500 })}>
               {currentTime.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -2376,18 +2398,22 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                   })}
                 />
               ))}
-              <IconButton color="primary" sx={{ mt: 1 }}>
-                <AddIcon />
-              </IconButton>
             </Box>
+          </Box>
+          {/* Slideshow Section */}
+          <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Typography variant="subtitle1" sx={{ color: 'text.secondary', mb: 1 }}>
+              User Gallery
+            </Typography>
+            <Slideshow />
           </Box>
         </Box>
       </DashboardBanner>
 
       {/* Weather Card and Quick Access Devices Side by Side */}
-      <Grid container spacing={4} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={6}>
-          <GlassyCard>
+      <Grid container spacing={4} sx={{ mb: 3, alignItems: 'stretch' }}>
+        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+          <GlassyCard sx={{ minHeight: 320, flex: 1, display: 'flex', flexDirection: 'column' }}>
             <CardHeading>
               Current Weather <span style={{ color: '#90caf9' }}>({weatherData.current.condition})</span>
             </CardHeading>
@@ -2396,6 +2422,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                 display: 'grid',
                 gridTemplateColumns: { xs: '1fr 1fr', sm: '1fr 1fr' },
                 gap: 2,
+                flex: 1,
               }}
             >
               {/* Weather metrics here */}
@@ -2422,11 +2449,10 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
             </Box>
           </GlassyCard>
         </Grid>
-        {/* Quick Access Devices Card */}
-        <Grid item xs={12} md={6}>
-          <GlassyCard>
+        <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+          <GlassyCard sx={{ minHeight: 250, flex: 1, display: 'flex', flexDirection: 'column' }}>
             <CardHeading>Quick Access Devices</CardHeading>
-            <QuickAccessGrid>
+            <QuickAccessGrid sx={{ flex: 1, minHeight: 'inherit', display: 'flex' }}>
               {(() => {
                 const quickDevices = Object.entries(relays)
                   .flatMap(([room, items]) => items.map(relay => ({ room, relay })))
@@ -2434,10 +2460,10 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                   .slice(0, 6);
                 if (quickDevices.length === 0) {
                   return (
-                    <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
-                      <StarBorderIcon sx={{ fontSize: 48, mb: 1, opacity: 0.5 }} />
-                      <Typography variant="subtitle1">No Quick Access Devices</Typography>
-                      <Typography variant="body2">Add devices using the star icon in Room Controls.</Typography>
+                    <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="subtitle1" sx={{ color: 'text.secondary', textAlign: 'center', maxWidth: 280 }}>
+                        You haven't added any devices to Quick Access yet. Add devices from the Room Controls section to access them quickly here.
+                      </Typography>
                     </Box>
                   );
                 }
@@ -3089,6 +3115,103 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
       </DialogActions>
     </Dialog>
   </Box>
+  );
+};
+
+// Add this Slideshow component above the Dashboard component
+function Slideshow() {
+  const [index, setIndex] = React.useState(0);
+  const [direction, setDirection] = React.useState(0); // -1 for left, 1 for right
+  const [userImages, setUserImages] = React.useState(() => {
+    const saved = localStorage.getItem('userSlideshowImages');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const total = housePhotos.length + userImages.length;
+  const allImages = [...userImages, ...housePhotos];
+  const timerRef = React.useRef();
+
+  React.useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      setDirection(1);
+      setIndex((i) => (i + 1) % total);
+    }, 10000);
+    return () => clearTimeout(timerRef.current);
+  }, [index, total]);
+
+  // Handle file input
+  const handleAddImage = (e) => {
+    const files = Array.from(e.target.files);
+    const newImages = files.map(file => {
+      // Simulate storing in src/user_images by using object URLs
+      return URL.createObjectURL(file);
+    });
+    const updated = [...userImages, ...newImages];
+    setUserImages(updated);
+    localStorage.setItem('userSlideshowImages', JSON.stringify(updated));
+    setIndex(0); // Show the first user image
+  };
+
+  // Handle dot click
+  const handleDotClick = (i) => {
+    setDirection(i > index ? 1 : -1);
+    setIndex(i);
+  };
+
+  return (
+    <Box sx={{ position: 'relative', width: 320, height: 220, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: 3, boxShadow: 3, bgcolor: 'background.paper' }}>
+      {/* Remove the add button from here */}
+      <Box sx={{ width: 320, height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+        <SlideShowImage key={index} src={allImages[index]} alt={`House ${index + 1}`} direction={direction} />
+      </Box>
+      {/* Dots below the image */}
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mt: 1 }}>
+        {allImages.map((_, i) => (
+          <Box
+            key={i}
+            onClick={() => handleDotClick(i)}
+            sx={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              bgcolor: i === index ? '#1976d2' : '#bdbdbd',
+              cursor: 'pointer',
+              transition: 'background 0.2s',
+              border: i === index ? '2px solid #1976d2' : '2px solid #e0e0e0',
+            }}
+          />
+        ))}
+      </Box>
+    </Box>
+  );
+}
+
+// Add this styled component above the Dashboard component
+const SlideShowImage = ({ src, alt, direction }) => {
+  const [show, setShow] = React.useState(true);
+  React.useEffect(() => {
+    setShow(false);
+    const timeout = setTimeout(() => setShow(true), 50);
+    return () => clearTimeout(timeout);
+  }, [src]);
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={alt}
+      sx={{
+        width: 320,
+        height: 200,
+        borderRadius: 3,
+        objectFit: 'cover',
+        boxShadow: 2,
+        opacity: show ? 1 : 0,
+        transform: show ? 'translateX(0)' : `translateX(${direction === 1 ? 40 : -40}px)`,
+        transition: 'opacity 0.5s, transform 0.5s',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+      }}
+    />
   );
 };
 

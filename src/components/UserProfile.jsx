@@ -42,6 +42,9 @@ import TimelineIcon from '@mui/icons-material/Timeline';
 import LanguageIcon from '@mui/icons-material/Language';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import PersonIcon from '@mui/icons-material/Person';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 
@@ -126,10 +129,10 @@ const UserProfile = ({ onNavigate }) => {
   const theme = useTheme();
   const [isEditing, setIsEditing] = React.useState(false);
   const [userData, setUserData] = React.useState({
-    name: 'Alex Johnson',
-    email: 'alex@example.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Smart Home Street',
+    name: 'Preethi & Akhila',
+    email: 'preethi-akhila@example.com',
+    phone: '+91 9951234567',
+    address: '123 building, XYZ Street',
     role: 'Admin',
     joinDate: 'May 15, 2025',
   });
@@ -152,6 +155,11 @@ const UserProfile = ({ onNavigate }) => {
     message: '',
     severity: 'success'
   });
+  const [galleryImages, setGalleryImages] = React.useState(() => {
+    const saved = localStorage.getItem('userSlideshowImages');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [galleryMessage, setGalleryMessage] = React.useState('');
 
   const recentActivity = [
     { date: '2025-05-20', action: 'Updated profile information', icon: <EditIcon /> },
@@ -230,6 +238,20 @@ const UserProfile = ({ onNavigate }) => {
     setNotificationSnackbar(prev => ({ ...prev, open: false }));
   };
 
+  const handleAddGalleryImages = (e) => {
+    const files = Array.from(e.target.files);
+    const newImages = files.map(file => URL.createObjectURL(file));
+    setGalleryImages(prev => [...prev, ...newImages]);
+  };
+  const handleRemoveGalleryImage = (idx) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== idx));
+  };
+  const handleSaveGallery = () => {
+    localStorage.setItem('userSlideshowImages', JSON.stringify(galleryImages));
+    setGalleryMessage('Gallery saved!');
+    setTimeout(() => setGalleryMessage(''), 2000);
+  };
+
   const renderProfileContent = () => (
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
@@ -298,6 +320,80 @@ const UserProfile = ({ onNavigate }) => {
                 </Typography>
               )}
             </Box>
+          </CardContent>
+        </InfoCard>
+          </Grid>
+
+          <Grid item xs={12}>
+        <InfoCard>
+          <CardContent>
+            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+              <AddPhotoAlternateIcon sx={{ mr: 1 }} />
+              Manage User Gallery
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+              <input
+                accept="image/*"
+                id="add-gallery-image"
+                type="file"
+                multiple
+                style={{ display: 'none' }}
+                onChange={handleAddGalleryImages}
+              />
+              <Button
+                variant="contained"
+                component="label"
+                htmlFor="add-gallery-image"
+                startIcon={<AddIcon />}
+              >
+                Add Photo
+              </Button>
+            </Box>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+              {galleryImages.length === 0 && (
+                <Typography variant="body2" color="text.secondary">No gallery images added yet.</Typography>
+              )}
+              {galleryImages.map((img, idx) => (
+                <Box key={idx} sx={{ position: 'relative', width: 160, height: 120 }}>
+                  <Box
+                    component="img"
+                    src={img}
+                    alt={`Gallery ${idx + 1}`}
+                    sx={{ width: 160, height: 120, borderRadius: 2, objectFit: 'cover', boxShadow: 1 }}
+                  />
+                  <IconButton
+                    size="small"
+                    onClick={() => handleRemoveGalleryImage(idx)}
+                    sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'rgba(255,0,0,0.7)' }, color: '#d32f2f' }}
+                  >
+                    <DeleteIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
+              <Box sx={{ width: 160, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px dashed #90caf9', borderRadius: 2, cursor: 'pointer', bgcolor: '#f5f7fa' }}>
+                <input
+                  accept="image/*"
+                  id="add-gallery-image"
+                  type="file"
+                  multiple
+                  style={{ display: 'none' }}
+                  onChange={handleAddGalleryImages}
+                />
+                <IconButton component="label" htmlFor="add-gallery-image" size="large" sx={{ color: '#1976d2' }}>
+                  <AddIcon fontSize="large" />
+                </IconButton>
+              </Box>
+            </Box>
+            <Button variant="contained" color="primary" onClick={handleSaveGallery} sx={{ borderRadius: 2, mt: 2 }}>
+              Save Gallery
+            </Button>
+            {galleryMessage && (
+              <Typography variant="body2" color="success.main" sx={{ ml: 2, display: 'inline' }}>{galleryMessage}</Typography>
+            )}
+            <Typography variant="caption" sx={{ display: 'block', mt: 1, color: 'text.secondary' }}>
+              (Images are stored in your browser and used in the User Gallery slideshow)
+            </Typography>
           </CardContent>
         </InfoCard>
           </Grid>
