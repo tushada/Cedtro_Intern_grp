@@ -16,6 +16,7 @@ import UserProfile from './components/UserProfile';
 import Settings from './components/Settings';
 import EnergyDetails from './components/EnergyDetails';
 import Logout from './components/Logout';
+import AirQualityDetails from './components/AirQualityDetails';
 
 const darkTheme = createTheme({
   palette: {
@@ -216,6 +217,10 @@ function AppContent({ themeMode, setThemeMode }) {
               <Route 
                 path="/energy-details" 
                 element={<EnergyDetails />} 
+              />
+              <Route 
+                path="/air-quality-details" 
+                element={<AirQualityDetails />} 
               />
               <Route 
                 path="/logout" 

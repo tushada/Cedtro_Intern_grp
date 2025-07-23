@@ -62,6 +62,8 @@ import Tooltip from '@mui/material/Tooltip';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import KitchenIcon from '@mui/icons-material/Kitchen';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import HomeUpdates from './HomeUpdates';
+import { useTheme } from '@mui/material';
 
 // Backend URLs
 const backendUrl = "https://app-web-backend-5dd0.onrender.com";
@@ -1470,6 +1472,7 @@ const housePhotos = [
 const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, username }) => {
   const navigate = useNavigate();
   const [currentTime, setCurrentTime] = React.useState(new Date());
+  const theme = useTheme();
 
   // Firebase and WebSocket state
   const deviceId = localStorage.getItem("deviceId");
@@ -2413,7 +2416,19 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
       {/* Weather Card and Quick Access Devices Side by Side */}
       <Grid container spacing={4} sx={{ mb: 3, alignItems: 'stretch' }}>
         <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
-          <GlassyCard sx={{ minHeight: 320, flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Paper elevation={4} sx={{
+            borderRadius: 16,
+            background: theme.palette.background.paper,
+            color: theme.palette.text.primary,
+            width: '100%',
+            p: 3,
+            boxShadow: theme.shadows[6],
+            mb: 2,
+            minHeight: 340,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}>
             <CardHeading>
               Current Weather <span style={{ color: '#90caf9' }}>({weatherData.current.condition})</span>
             </CardHeading>
@@ -2447,7 +2462,7 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
                 <Typography variant="caption" color="text.secondary">Precipitation</Typography>
               </WeatherCard>
             </Box>
-          </GlassyCard>
+          </Paper>
         </Grid>
         <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
           <GlassyCard sx={{ minHeight: 250, flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -2496,8 +2511,8 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
       </Grid>
 
       {/* Room Controls and Energy Consumption */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={4}>
+      <Grid container spacing={3} sx={{ marginBottom: 3 }}>
+        <Grid item xs={12} md={6}>
           <GlassyCard>
             <CardHeading sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               Room Controls
@@ -2589,268 +2604,8 @@ const Dashboard = ({ isGuest, discoveredDevices = [], roomsData, setRoomsData, u
             </Box>
           </GlassyCard>
         </Grid>
-        <Grid item xs={12} md={8}>
-          <GlassyCard>
-            <CardHeading>Energy Consumption</CardHeading>
-              <Box sx={{ mb: 3 }}>
-                <Typography 
-                  variant="h5" 
-                  gutterBottom
-                  sx={{
-                    fontWeight: 600,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1,
-                  }}
-                >
-                  <ElectricBoltIcon color="primary" />
-                  Energy Consumption
-                </Typography>
-                <StyledButtonGroup sx={{ mb: 2 }}>
-                  {['hourly', 'daily', 'weekly', 'monthly'].map((view) => (
-                    <Button
-                      key={view}
-                      variant={energyView === view ? 'contained' : 'outlined'}
-                      onClick={() => setEnergyView(view)}
-                      startIcon={
-                        view === 'hourly' ? <AccessTimeIcon /> :
-                        view === 'daily' ? <CalendarTodayIcon /> :
-                        view === 'weekly' ? <DateRangeIcon /> :
-                        <CalendarMonthIcon />
-                      }
-                    >
-                      {view}
-                    </Button>
-                  ))}
-                </StyledButtonGroup>
-              </Box>
-              <Box sx={{ height: 400, position: 'relative' }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RechartsLineChart 
-                    data={energyData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
-                  >
-                    <defs>
-                      <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#90caf9" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#90caf9" stopOpacity={0.1}/>
-                      </linearGradient>
-                      <filter id="glow">
-                        <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-                        <feMerge>
-                          <feMergeNode in="coloredBlur"/>
-                          <feMergeNode in="SourceGraphic"/>
-                        </feMerge>
-                      </filter>
-                    </defs>
-                    <RechartsCartesianGrid 
-                      strokeDasharray="3 3" 
-                      stroke="rgba(144, 202, 249, 0.1)"
-                    />
-                    <RechartsXAxis 
-                      dataKey="label" 
-                      stroke="rgba(144, 202, 249, 0.5)"
-                      tick={{ fill: 'rgba(144, 202, 249, 0.7)' }}
-                    />
-                    <RechartsYAxis 
-                      label={{ 
-                        value: 'Consumption (kW)', 
-                        angle: -90, 
-                        position: 'insideLeft',
-                        fill: 'rgba(144, 202, 249, 0.7)'
-                      }}
-                      domain={
-                        energyView === 'hourly' ? [0, 2.5] : 
-                        energyView === 'daily' ? [0, 45] :
-                        energyView === 'weekly' ? [0, 250] :
-                        [0, 1200]
-                      }
-                      tickCount={6}
-                      tickFormatter={(value) => 
-                        energyView === 'hourly' ? value.toFixed(1) : 
-                        value % 1 === 0 ? value.toString() : value.toFixed(1)
-                      }
-                      stroke="rgba(144, 202, 249, 0.5)"
-                      tick={{ fill: 'rgba(144, 202, 249, 0.7)' }}
-                    />
-                    <RechartsTooltip 
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const value = payload[0].value;
-                          const timestamp = payload[0].payload.timestamp;
-                          return (
-                            <AnimatedTooltip>
-                              <p className="label">{label}</p>
-                              <p className="value">
-                                Power: {value.toFixed(2)} kW
-                              </p>
-                              <p className="timestamp">
-                                {timestamp ? new Date(timestamp).toLocaleString() : 
-                                 energyView === 'hourly' ? 'Current hour' : 
-                                 energyView === 'daily' ? 'Daily total' : 
-                                 energyView === 'weekly' ? 'Weekly total' : 'Monthly total'}
-                              </p>
-                            </AnimatedTooltip>
-                          );
-                        }
-                        return null;
-                      }}
-                      cursor={{
-                        stroke: 'rgba(144, 202, 249, 0.3)',
-                        strokeWidth: 2,
-                        strokeDasharray: '5 5',
-                      }}
-                    />
-                    <RechartsLine 
-                      type="monotone" 
-                      dataKey="consumption" 
-                      stroke="#90caf9"
-                      strokeWidth={3}
-                      dot={false}
-                      activeDot={{
-                        r: 8,
-                        stroke: '#90caf9',
-                        strokeWidth: 2,
-                        fill: '#fff',
-                        filter: 'url(#glow)',
-                      }}
-                      animationDuration={1500}
-                      animationEasing="ease-in-out"
-                    />
-                    <RechartsLine 
-                      type="monotone" 
-                      dataKey="consumption" 
-                      stroke="url(#lineGradient)"
-                      strokeWidth={20}
-                      dot={false}
-                      activeDot={false}
-                      opacity={0.1}
-                    />
-                  </RechartsLineChart>
-                </ResponsiveContainer>
-              </Box>
-              <Stack spacing={2} sx={{ mt: 2 }}>
-                {/* Today's Summary */}
-                <SummaryCard>
-                  <SummaryHeader onClick={() => setExpandedSummary(expandedSummary === 'today' ? null : 'today')}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <TodayIcon color="primary" />
-                      <Typography variant="h6">Today's Energy Summary</Typography>
-                    </Box>
-                    <IconButton size="small">
-                      {expandedSummary === 'today' ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  </SummaryHeader>
-                  <Collapse in={expandedSummary === 'today'}>
-                    <SummaryContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="h4" color="primary" sx={{ flexGrow: 1 }}>
-                          {hourlyData.reduce((sum, hour) => sum + hour.consumption, 0).toFixed(1)} kW
-                        </Typography>
-                        <Box sx={{ textAlign: 'right' }}>
-                          <Typography variant="h5" color="error">
-                            ₹{(
-                              hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 8
-                            ).toFixed(2)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            @ ₹8/kWh
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                      </Typography>
-                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(144, 202, 249, 0.1)' }}>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Today's Peak: {(
-                            Math.max(...hourlyData.map(h => h.consumption))
-                          ).toFixed(1)} kW
-                        </Typography>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Today's Average: {(
-                            hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) / 24
-                          ).toFixed(1)} kW
-                        </Typography>
-                      </Box>
-                    </SummaryContent>
-                  </Collapse>
-                </SummaryCard>
-
-                {/* Yesterday's Summary */}
-                <SummaryCard>
-                  <SummaryHeader onClick={() => setExpandedSummary(expandedSummary === 'yesterday' ? null : 'yesterday')}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <HistoryIcon color="primary" />
-                      <Typography variant="h6">Yesterday's Energy Summary</Typography>
-                    </Box>
-                    <IconButton size="small">
-                      {expandedSummary === 'yesterday' ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    </IconButton>
-                  </SummaryHeader>
-                  <Collapse in={expandedSummary === 'yesterday'}>
-                    <SummaryContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                        <Typography variant="h4" color="primary" sx={{ flexGrow: 1 }}>
-                          {(hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85).toFixed(1)} kW
-                        </Typography>
-                        <Box sx={{ textAlign: 'right' }}>
-                          <Typography variant="h5" color="error">
-                            ₹{((hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) * 8).toFixed(2)}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            @ ₹8/kWh
-                          </Typography>
-                        </Box>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(Date.now() - 86400000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                      </Typography>
-                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid rgba(144, 202, 249, 0.1)' }}>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Yesterday's Peak: {(Math.max(...hourlyData.map(h => h.consumption)) * 0.9).toFixed(1)} kW
-                        </Typography>
-                        <Typography variant="subtitle2" color="text.secondary">
-                          Yesterday's Average: {((hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) / 24) * 0.85).toFixed(1)} kW
-                        </Typography>
-                        <Typography 
-                          variant="subtitle2" 
-                          color={hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) > 
-                            (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) ? 'error' : 'success.main'}
-                          sx={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            gap: 0.5,
-                            mt: 1,
-                            fontWeight: 600,
-                          }}
-                        >
-                          {hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) > 
-                          (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) ? 
-                          <TrendingUpIcon color="error" /> : 
-                          <TrendingDownIcon color="success" />}
-                          {hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) > 
-                          (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) ? 
-                          ((hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) / (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) * 100) - 100).toFixed(1) + 
-                          '% higher than yesterday' : 
-                          (100 - (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) / (hourlyData.reduce((sum, hour) => sum + hour.consumption, 0) * 0.85) * 100)).toFixed(1) + 
-                          '% lower than yesterday'}
-                        </Typography>
-                      </Box>
-                    </SummaryContent>
-                  </Collapse>
-                </SummaryCard>
-              </Stack>
-              <Box sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
-                <ViewAllButton
-                  variant="contained"
-                  onClick={() => navigate('/energy-details')}
-                  startIcon={<AnalyticsIcon />}
-                >
-                  View All Energy Details
-                </ViewAllButton>
-              </Box>
-          </GlassyCard>
+        <Grid item xs={12} md={6}>
+          <HomeUpdates />
         </Grid>
       </Grid>
 
